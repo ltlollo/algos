@@ -29,10 +29,10 @@ test_8x16x8(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         12800,  28160,  43520,  58880,  74240,  89600,  104960, 120320,
@@ -44,8 +44,8 @@ test_8x16x8(void) {
         13808,  30704,  47600,  64496,  81392,  98288,  115184, 132080,
         13976,  31128,  48280,  65432,  82584,  99736,  116888, 134040,
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -62,10 +62,10 @@ test_16x8x8(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         3584,   7168,   10752,  14336,  17920,  21504,  25088,  28672,
@@ -85,8 +85,8 @@ test_16x8x8(void) {
         4312,   8792,   13272,  17752,  22232,  26712,  31192,  35672,
         4364,   8908,   13452,  17996,  22540,  27084,  31628,  36172,
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -103,10 +103,10 @@ test_8x8x16(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         1792,   3584,   5376,   7168,   8960,   10752,  12544,  14336,  16128,  17920,  19712,  21504,23296,   25088,  26880,  28672,
@@ -118,8 +118,8 @@ test_8x8x16(void) {
         2104,   4280,   6456,   8632,   10808,  12984,  15160,  17336,  19512,  21688,  23864,  26040,28216,   30392,  32568,  34744,
         2156,   4396,   6636,   8876,   11116,  13356,  15596,  17836,  20076,  22316,  24556,  26796,29036,   31276,  33516,  35756
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -135,10 +135,10 @@ test_8x8x8(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         1792,   3584,   5376,   7168,   8960,   10752,  12544,  14336,
@@ -150,8 +150,8 @@ test_8x8x8(void) {
         2104,   4280,   6456,   8632,   10808,  12984,  15160,  17336,
         2156,   4396,   6636,   8876,   11116,  13356,  15596,  17836,
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -168,10 +168,10 @@ test_16x8x16(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         3584,   7168,   10752,  14336,  17920,  21504,  25088,  28672,  32256,  35840,  39424,  43008, 46592,  50176,  53760,  57344,  
@@ -191,8 +191,8 @@ test_16x8x16(void) {
         4312,   8792,   13272,  17752,  22232,  26712,  31192,  35672,  40152,  44632,  49112,  53592, 58072,  62552,  67032,  71512,  
         4364,   8908,   13452,  17996,  22540,  27084,  31628,  36172,  40716,  45260,  49804,  54348, 58892,  63436,  67980,  72524,
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -209,10 +209,10 @@ test_16x16x8(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         25600,  56320,  87040,  117760, 148480, 179200, 209920, 240640, 
@@ -232,8 +232,8 @@ test_16x16x8(void) {
         27952,  62256,  96560,  130864, 165168, 199472, 233776, 268080, 
         28120,  62680,  97240,  131800, 166360, 200920, 235480, 270040
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -250,10 +250,10 @@ test_8x16x16(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         12800,  28160,  43520,  58880,  74240,  89600,  104960, 120320, 135680, 151040, 166400, 181760, 197120, 212480, 227840, 243200, 
@@ -265,8 +265,8 @@ test_8x16x16(void) {
         13808,  30704,  47600,  64496,  81392,  98288,  115184, 132080, 148976, 165872, 182768, 199664, 216560, 233456, 250352, 267248, 
         13976,  31128,  48280,  65432,  82584,  99736,  116888, 134040, 151192, 168344, 185496, 202648, 219800, 236952, 254104, 271256,
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -282,10 +282,10 @@ test_16x16x16(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotam32(0.f, 1.f, a, k, m);
-    iotam32(3.f, 1.f, b, n, k);
+    iotamf32(0.f, 1.f, a, k, m);
+    iotamf32(3.f, 1.f, b, n, k);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         25600,  56320,  87040,  117760, 148480, 179200, 209920, 240640, 271360, 302080, 332800, 363520, 394240, 424960, 455680, 486400, 
@@ -305,8 +305,8 @@ test_16x16x16(void) {
         27952,  62256,  96560,  130864, 165168, 199472, 233776, 268080, 302384, 336688, 370992, 405296, 439600, 473904, 508208, 542512, 
         28120,  62680,  97240,  131800, 166360, 200920, 235480, 270040, 304600, 339160, 373720, 408280, 442840, 477400, 511960, 546520,
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int
@@ -322,10 +322,10 @@ test_3x3x3(void) {
     float *b = calloc(k * n, sizeof (float));
     float *c = calloc(m * n, sizeof (float));
 
-    iotaoffm32(0.f, 1.f, a, k, m, 0, 0, 3, 3);
-    iotaoffm32(3.f, 1.f, b, n, k, 0, 0, 3, 3);
+    iotaoffmf32(0.f, 1.f, a, k, m, 0, 0, 3, 3);
+    iotaoffmf32(3.f, 1.f, b, n, k, 0, 0, 3, 3);
 
-    gemm32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
 
     static float et[] = {
         42,     69,     96,     0,      0,      0,      0,      0,
@@ -337,8 +337,8 @@ test_3x3x3(void) {
         0,      0,      0,      0,      0,      0,      0,      0,
         0,      0,      0,      0,      0,      0,      0,      0,
     }, e[sizeof (et) / sizeof (float)];
-    chordm32(e, et, n, m);
-    return eqm32(c, e, n, m) == 0;
+    chordmf32(e, et, n, m);
+    return eqmf32(c, e, n, m) == 0;
 }
 
 int

@@ -4,10 +4,10 @@
 #if !defined (SELF)
 #define SELF
 #   include "mm.h"
-#   define FN_(a, b)            a##b
-#   define FN(a, b)             FN_(a, b)
-#   define stream_load (Vec)    _mm256_stream_load_si256
-#   define prefetch             _mm_prefetch
+#   define FN_(a, b)    a##b
+#   define FN(a, b)     FN_(a, b)
+#   define stream_load  (Vec) _mm256_stream_load_si256
+#   define prefetch     _mm_prefetch
 #endif
 
 #if !defined (F32T)
@@ -19,24 +19,23 @@
 #   define store    _mm256_store_ps
 #   define load     _mm256_load_ps
 #   define stream   _mm256_stream_ps
-#   define FS       32
+#   define FS       f32
 #   define F32T
 #elif !defined (F64T)
 #   define LINE     (4)
 #   define Num      double
 #   define Vec      __m256d
-#   define __m256   __m256d
 #   define set1     _mm256_set1_pd
 #   define fmadd    _mm256_fmadd_pd
 #   define store    _mm256_store_pd
 #   define load     _mm256_load_pd
 #   define stream   _mm256_stream_pd
-#   define FS       64
+#   define FS       f64
 #   define F64T
 #endif
 
 void
-FN(gemm, FS)(Num *a, Num *b, Num *c, size_t m, size_t k, size_t n, Num *A,
+FN(dgemm, FS)(Num *a, Num *b, Num *c, size_t m, size_t k, size_t n, Num *A,
     Num *B, size_t L2, size_t L3) {
     size_t _kc = align_up(min(L3 / n + 1, k), LINE);
     size_t xa, ya, xb, yb, xc, yc, kc, mc;
