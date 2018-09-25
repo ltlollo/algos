@@ -145,6 +145,74 @@ FN(chordm, FS)(Num *mt, Num *m, size_t mx, size_t my) {
     }
 }
 
+void
+FN(Tm, FS)(Num *m, Num *mc, size_t mx, size_t my) {
+    __m256i regs[8];
+    __m256i tmp[8];
+    for (size_t x = 0; x < mx; x += 8) {
+        for (size_t y = 0; y < my; y += 8) {
+            for (size_t i = 0; i < 8; i++) {
+                void *src = m + (x + i) * my + y;
+                regs[i] = _mm256_stream_load_si256(src);
+            }
+            tmp[0] = _mm256_permute2x128_si256(regs[4], regs[0], 0x3);
+            regs[0] = _mm256_blend_epi32(regs[0], tmp[0], 0xf0);
+            regs[4] = _mm256_blend_epi32(regs[4], tmp[0], 0x0f);
+            tmp[1] = _mm256_permute2x128_si256(regs[5], regs[1], 0x3);
+            regs[1] = _mm256_blend_epi32(regs[1], tmp[1], 0xf0);
+            regs[5] = _mm256_blend_epi32(regs[5], tmp[1], 0x0f);
+            tmp[2] = _mm256_permute2x128_si256(regs[6], regs[2], 0x3);
+            regs[2] = _mm256_blend_epi32(regs[2], tmp[2], 0xf0);
+            regs[6] = _mm256_blend_epi32(regs[6], tmp[2], 0x0f);
+            tmp[3] = _mm256_permute2x128_si256(regs[7], regs[3], 0x3);
+            regs[3] = _mm256_blend_epi32(regs[3], tmp[3], 0xf0);
+            regs[7] = _mm256_blend_epi32(regs[7], tmp[3], 0x0f);
+
+            tmp[0] = _mm256_shuffle_epi32(regs[0], 0x0e);
+            tmp[1] = _mm256_shuffle_epi32(regs[1], 0x0e);
+            tmp[2] = _mm256_shuffle_epi32(regs[2], 0x40);
+            tmp[3] = _mm256_shuffle_epi32(regs[3], 0x40);
+            tmp[4] = _mm256_shuffle_epi32(regs[4], 0x0e);
+            tmp[5] = _mm256_shuffle_epi32(regs[5], 0x0e);
+            tmp[6] = _mm256_shuffle_epi32(regs[6], 0x40);
+            tmp[7] = _mm256_shuffle_epi32(regs[7], 0x40);
+
+            regs[0] = _mm256_blend_epi32(regs[0], tmp[2], 0xcc);
+            regs[1] = _mm256_blend_epi32(regs[1], tmp[3], 0xcc);
+            regs[2] = _mm256_blend_epi32(regs[2], tmp[0], 0x33);
+            regs[3] = _mm256_blend_epi32(regs[3], tmp[1], 0x33);
+            regs[4] = _mm256_blend_epi32(regs[4], tmp[6], 0xcc);
+            regs[5] = _mm256_blend_epi32(regs[5], tmp[7], 0xcc);
+            regs[6] = _mm256_blend_epi32(regs[6], tmp[4], 0x33);
+            regs[7] = _mm256_blend_epi32(regs[7], tmp[5], 0x33);
+
+#ifndef F64T
+            tmp[0] = _mm256_shuffle_epi32(regs[0], 0x31);
+            tmp[1] = _mm256_shuffle_epi32(regs[1], 0x80);
+            tmp[2] = _mm256_shuffle_epi32(regs[2], 0x31);
+            tmp[3] = _mm256_shuffle_epi32(regs[3], 0x80);
+            tmp[4] = _mm256_shuffle_epi32(regs[4], 0x31);
+            tmp[5] = _mm256_shuffle_epi32(regs[5], 0x80);
+            tmp[6] = _mm256_shuffle_epi32(regs[6], 0x31);
+            tmp[7] = _mm256_shuffle_epi32(regs[7], 0x80);
+
+            regs[0] = _mm256_blend_epi32(regs[0], tmp[1], 0xaa);
+            regs[1] = _mm256_blend_epi32(regs[1], tmp[0], 0x55);
+            regs[2] = _mm256_blend_epi32(regs[2], tmp[3], 0xaa);
+            regs[3] = _mm256_blend_epi32(regs[3], tmp[2], 0x55);
+            regs[4] = _mm256_blend_epi32(regs[4], tmp[5], 0xaa);
+            regs[5] = _mm256_blend_epi32(regs[5], tmp[4], 0x55);
+            regs[6] = _mm256_blend_epi32(regs[6], tmp[7], 0xaa);
+            regs[7] = _mm256_blend_epi32(regs[7], tmp[6], 0x55);
+#endif
+            for (size_t i = 0; i < 8; i++) {
+                void *src = mc + (y + i) * mx + x;
+                stream(src, (Vec) regs[i]);
+            }
+        }
+    }
+}
+
 #undef LINE
 #undef Num
 #undef Vec

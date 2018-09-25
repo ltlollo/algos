@@ -24,6 +24,7 @@ void iotaoffmf32(float v, float d, float *m, size_t mx, size_t my, size_t ox,
 void iotamf32(float v, float d, float *m, size_t mx, size_t my);
 int  eqmf32(float *a, float *b, size_t x, size_t y);
 void chordmf32(float *mt, float *m, size_t mx, size_t my);
+void Tmf32(float *m, float *mc, size_t mx, size_t my);
 
 void gemm64(double *a, double *b, double *c, size_t m, size_t k, size_t n,
     double *A, double *B, size_t L2, size_t L3);
@@ -35,5 +36,7 @@ void iotaoffm64(double v, double d, double *m, size_t mx, size_t my, size_t ox,
 void iotam64(double v, double d, double *m, size_t mx, size_t my);
 int  eqm64(double *a, double *b, size_t x, size_t y);
 void chordm64(double *mt, double *m, size_t mx, size_t my);
+void Tmf64(double *m, double *mc, size_t mx, size_t my);
+
 
 #endif // MM_H
