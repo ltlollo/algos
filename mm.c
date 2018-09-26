@@ -7,8 +7,14 @@
 #   define FN_(a, b)    a##b
 #   define FN(a, b)     FN_(a, b)
 #   define stream_load  (Vec) _mm256_stream_load_si256
-#   define prefetch     _mm_prefetch
+#   ifdef BOUND_PREFETCH
+#       define prefetch(a, m, h) _mm_prefetch((void *)min(a, b), h)
+#   else
+#       define prefetch(a, m, h) _mm_prefetch(a, h)
+#   endif
 #endif
+
+
 
 #if !defined (F32T)
 #   define LINE     (8)
@@ -49,10 +55,9 @@ FN(dgemm, FS)(Num *a, Num *b, Num *c, size_t m, size_t k, size_t n, Num *A,
         for (size_t j = 0; j < n; j++) {
             for (size_t i = 0; i < kc; i += LINE) {
                 void *vb = b + k * j + yb + i;
-                Num *vc = (void *)min(c + kc * j + i, lc);
                 rb = stream_load(vb);
                 store(B + kc * j + i, rb);
-                prefetch(vc, _MM_HINT_T2);
+                prefetch(c + kc * j + i, lc, _MM_HINT_T2);
             }
         }
         size_t _mc = align_up(min(L2 / kc + 1, m), LINE);
@@ -62,10 +67,9 @@ FN(dgemm, FS)(Num *a, Num *b, Num *c, size_t m, size_t k, size_t n, Num *A,
             for (size_t j = 0; j < kc; j++) {
                 for (size_t i = 0; i < mc; i += LINE) {
                     void *va = a + (xa + j) * m + (ya + i);
-                    Num *vc = (void *)min(c + m * j + yc, lc);
                     ra = stream_load(va);
                     store(A + mc * j + i, ra);
-                    prefetch(vc, _MM_HINT_T1);
+                    prefetch(c + m * j + yc, lc, _MM_HINT_T1);
                 }
             }
             for (size_t ni = 0; ni < n; ni += LINE) {
