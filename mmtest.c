@@ -12,8 +12,8 @@
 #define L3 (2048 * 1024)
 #define L2 ( 256 * 1024)
 
-float A[L2 / sizeof (float)];
-float B[L3 / sizeof (float)];
+static float A[L2 / sizeof (float)];
+static float B[L3 / sizeof (float)];
 
 int
 test_dgemmf32_8x16x8(void) {
