@@ -156,15 +156,16 @@ FN(Tm, FS)(Num *m, Num *mc, size_t mx, size_t my) {
                 regs[i] = _mm256_stream_load_si256(src);
             }
             tmp[0] = _mm256_permute2x128_si256(regs[4], regs[0], 0x3);
+            tmp[1] = _mm256_permute2x128_si256(regs[5], regs[1], 0x3);
+            tmp[2] = _mm256_permute2x128_si256(regs[6], regs[2], 0x3);
+            tmp[3] = _mm256_permute2x128_si256(regs[7], regs[3], 0x3);
+
             regs[0] = _mm256_blend_epi32(regs[0], tmp[0], 0xf0);
             regs[4] = _mm256_blend_epi32(regs[4], tmp[0], 0x0f);
-            tmp[1] = _mm256_permute2x128_si256(regs[5], regs[1], 0x3);
             regs[1] = _mm256_blend_epi32(regs[1], tmp[1], 0xf0);
             regs[5] = _mm256_blend_epi32(regs[5], tmp[1], 0x0f);
-            tmp[2] = _mm256_permute2x128_si256(regs[6], regs[2], 0x3);
             regs[2] = _mm256_blend_epi32(regs[2], tmp[2], 0xf0);
             regs[6] = _mm256_blend_epi32(regs[6], tmp[2], 0x0f);
-            tmp[3] = _mm256_permute2x128_si256(regs[7], regs[3], 0x3);
             regs[3] = _mm256_blend_epi32(regs[3], tmp[3], 0xf0);
             regs[7] = _mm256_blend_epi32(regs[7], tmp[3], 0x0f);
 
