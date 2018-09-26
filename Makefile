@@ -1,15 +1,26 @@
 CFLAGS += -march=native
 REL_CFLAGS = ${CFLAGS} -Ofast -s -funroll-all-loops 
-DBG_CFLAGS += ${CFLAGS} -O0 -g
+DBG_CFLAGS = ${CFLAGS} -O0 -g
 
-tests: mm
-	gcc ${DBG_CFLAGS} mm.o mm_tests.c -o mm_tests
+test: mmtest
 
-mm:
+bench: mmbench
+
+mmtest: mmdbg
+	gcc ${DBG_CFLAGS} mm.o mmtest.c -o mmtests
+	./mmtests
+
+mmbench: mmrel
+	gcc ${REL_CFLAGS} mm.o mmbench.c -o mmbench
+	./mmbench
+
+mmdbg:
 	gcc ${DBG_CFLAGS} -c mm.c
 
-release:
+mmrel:
 	gcc ${REL_CFLAGS} -c mm.c
 
+
+
 clean:
-	rm -f *.o mm_tests
+	rm -f *.o mmtests
