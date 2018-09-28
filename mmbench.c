@@ -60,18 +60,13 @@ main() {
         BENCH(NULL, 0),
     };
     struct timespec beg, end;
-    char time[64];
     for (struct Bnc *bench = benchs; bench->fn; bench++) {
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &beg);
         bench->fn(bench->times);
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
         float ts = ((end.tv_sec * 1000000000 + end.tv_nsec) -
-            (beg.tv_sec * 1000000000 + beg.tv_nsec)) * 0.001f;
-
-        snprintf(time, 64, "%f%s", ts < 10000 ? ts : ts * 0.000001,
-            ts < 10000 ? "ms" : "s");
-
-        printf("[%s]: %s, niter: %ld, %f ms/niter\n", time, bench->wh,
-            bench->times, ts / bench->times);
+            (beg.tv_sec * 1000000000 + beg.tv_nsec)) * 1e-6;
+        printf("[%s]: time: %f ms, niter: %ld, rate: %f ms/niter\n", bench->wh,
+            ts, bench->times, ts / bench->times);
     }
 }
