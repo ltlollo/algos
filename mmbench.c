@@ -13,21 +13,17 @@
 #define L3 (2048 * 1024)
 #define L2 ( 256 * 1024)
 
-static float A[L2 / sizeof (float)];
-static float B[L3 / sizeof (float)];
+static _Alignas(32) float A[L2 / sizeof (float)];
+static _Alignas(32) float B[L3 / sizeof (float)];
 
 void
 bench_dgemmf32_256x256(size_t times) {
     size_t m, k, n;
     m = n = k = 256;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 0.1f, a, k, m);
     iotamf32(3.f, 0.1f, b, n, k);
@@ -42,8 +38,8 @@ bench_Tmf32_256x256(size_t times) {
     size_t m, n;
     m = n = 256;
 
-    float *a = calloc(m * n, sizeof (float));
-    float *b = calloc(n * m, sizeof (float));
+    float *a = mmallocf32(m, n);
+    float *b = mmallocf32(n, m);
 
     iotamf32(0.f, 1.f, a, m, n);
 
@@ -59,8 +55,8 @@ main() {
         const char *wh;
         size_t times;
     } benchs[] = {
-        BENCH(bench_dgemmf32_256x256, 1<<12),
-        BENCH(bench_Tmf32_256x256, 1<<12),
+        BENCH(bench_dgemmf32_256x256, 1<<13),
+        BENCH(bench_Tmf32_256x256, 1<<13),
         BENCH(NULL, 0),
     };
     struct timespec beg, end;

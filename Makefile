@@ -1,5 +1,7 @@
-CFLAGS += -march=native
-REL_CFLAGS = ${CFLAGS} -Ofast -s -funroll-all-loops 
+CFLAGS += -march=native -Wall -Wextra -pedantic
+LDFLAGS += -Wl,--gc-sections
+REL_CFLAGS = ${CFLAGS}  -s -Ofast -funroll-all-loops -minline-all-stringops \
+	-ffunction-sections -fdata-sections
 DBG_CFLAGS = ${CFLAGS} -O0 -g
 
 test: mmtest
@@ -7,20 +9,18 @@ test: mmtest
 bench: mmbench
 
 mmtest: mmdbg
-	gcc ${DBG_CFLAGS} mm.o mmtest.c -o mmtests
-	./mmtests
+	$(CC) ${LDFLAGS} ${DBG_CFLAGS} mm.o mmtest.c -o mmtests
+	@./mmtests
 
 mmbench: mmrel
-	gcc ${REL_CFLAGS} mm.o mmbench.c -o mmbench
-	./mmbench
+	$(CC) ${LDFLAGS} ${REL_CFLAGS} mm.o mmbench.c -o mmbench
+	@./mmbench
 
 mmdbg:
-	gcc ${DBG_CFLAGS} -c mm.c
+	$(CC) ${LDFLAGS} ${DBG_CFLAGS} -c mm.c
 
 mmrel:
-	gcc ${REL_CFLAGS} -c mm.c
-
-
+	$(CC) ${LDFLAGS} ${REL_CFLAGS} -c mm.c
 
 clean:
 	rm -f *.o mmtests

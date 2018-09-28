@@ -1,5 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 // For more information, see LICENSE
+#include <string.h>
+#include <stdio.h>
+#include <immintrin.h>
 
 #if !defined (SELF)
 #define SELF
@@ -10,8 +13,18 @@
 #   ifdef BOUND_PREFETCH
 #       define prefetch(a, m, h) _mm_prefetch((void *)min(a, b), h)
 #   else
-#       define prefetch(a, m, h) _mm_prefetch(a, h)
+#       define prefetch(a, m, h)        \
+            do {                        \
+                _mm_prefetch(a, h);     \
+                (void)m;                \
+            } while (0)
 #   endif
+#   define _u(x) ((uintptr_t)(x))
+#   define min(x, y) (_u(y) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
+#   define max(x, y) (_u(x) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
+#   define align_down(n, p) (_u(n) & ~(p - 1))
+#   define align_up(n, p)   ((_u(n) + (p - 1)) & ~(p - 1))
+#   define pad(x) (256 / 8 / sizeof (x))
 #endif
 
 
@@ -24,7 +37,7 @@
 #   define fmadd    _mm256_fmadd_ps
 #   define store    _mm256_store_ps
 #   define load     _mm256_load_ps
-#   define stream   _mm256_stream_ps
+#   define stream   _mm256_store_ps
 #   define FS       f32
 #   define F32T
 #elif !defined (F64T)
@@ -40,9 +53,25 @@
 #   define F64T
 #endif
 
+Num *
+FN(mmalloc, FS)(size_t m, size_t n) {
+    m = align_up(m, pad(Num));
+    n = align_up(n, pad(Num));
+
+    Num *res = aligned_alloc(32, m * n * sizeof (Num));
+    if (res) {
+        memset(res, 0, m * n * sizeof (Num));
+    }
+    return res;
+}
+
 void
-FN(dgemm, FS)(Num *a, Num *b, Num *c, size_t m, size_t k, size_t n, Num *A,
+FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n, Num *A,
     Num *B, size_t L2, size_t L3) {
+    m = align_up(m, pad(Num));
+    k = align_up(k, pad(Num));
+    n = align_up(n, pad(Num));
+
     size_t _kc = align_up(min(L3 / n + 1, k), LINE);
     size_t xa, ya, xb, yb, xc, yc, kc, mc;
     Vec ra, rb, rc[LINE];
@@ -78,6 +107,7 @@ FN(dgemm, FS)(Num *a, Num *b, Num *c, size_t m, size_t k, size_t n, Num *A,
                     for (size_t j = 0; j < LINE; j++) {
                         void *vc = c + m * (xc + j) + yc + oi;
                         rc[j] = stream_load(vc);
+                        prefetch(c + m * (xc + j) + yc + oi + 8, lc, _MM_HINT_T0);
                     }
                     for (size_t pi = 0; pi < kc; pi++) {
                         ra = load(A + mc * pi + oi);
@@ -98,6 +128,9 @@ FN(dgemm, FS)(Num *a, Num *b, Num *c, size_t m, size_t k, size_t n, Num *A,
 void
 FN(printoffm, FS)(Num *m, size_t mx, size_t my, size_t ox, size_t oy,
     size_t dx, size_t dy) {
+    mx = align_up(mx, pad(Num));
+    my = align_up(my, pad(Num));
+
     for (size_t y = oy; y < oy + dy; y++) {
         for (size_t x = ox; x < ox + dx; x++) {
             printf("%0.2f,\t", m[my * x + y]);
@@ -115,6 +148,9 @@ FN(printm, FS)(Num *m, size_t mx, size_t my) {
 void
 FN(iotaoffm, FS)(Num v, Num d, Num *m, size_t mx, size_t my, size_t ox,
     size_t oy, size_t dx, size_t dy) {
+    mx = align_up(mx, pad(Num));
+    my = align_up(my, pad(Num));
+
     for (size_t x = ox; x < ox + dx; x++) {
         for (size_t y = oy; y < oy + dy; y++, v += d) {
             m[my * x + y] = v;
@@ -129,6 +165,9 @@ FN(iotam, FS)(Num v, Num d, Num *m, size_t mx, size_t my) {
 
 int
 FN(eqm, FS)(Num *a, Num *b, size_t x, size_t y) {
+    x = align_up(x, pad(Num));
+    y = align_up(y, pad(Num));
+
     for (size_t i = 0; i < x; i++) {
         for (size_t j = 0; j < y; j++) {
             if (a[y * i + j] != b[y * i + j]) {
@@ -140,7 +179,10 @@ FN(eqm, FS)(Num *a, Num *b, size_t x, size_t y) {
 }
 
 void
-FN(chordm, FS)(Num *mt, Num *m, size_t mx, size_t my) {
+FN(chordm, FS)(Num *mt, Num *restrict m, size_t mx, size_t my) {
+    mx = align_up(mx, pad(Num));
+    my = align_up(my, pad(Num));
+
     for (size_t i = 0; i < my; i++) {
         for (size_t j = 0; j < mx; j++) {
             Num q = m[mx * i + j];
@@ -150,7 +192,11 @@ FN(chordm, FS)(Num *mt, Num *m, size_t mx, size_t my) {
 }
 
 void
-FN(Tm, FS)(Num *m, Num *mc, size_t mx, size_t my) {
+FN(Tm, FS)(Num *m, Num *restrict mc, size_t mx, size_t my) {
+    mx = align_up(mx, pad(Num));
+    my = align_up(my, pad(Num));
+    Num *lc = m + mx * my - LINE;
+
     __m256i regs[8];
     __m256i tmp[8];
     for (size_t x = 0; x < mx; x += 8) {
@@ -159,6 +205,14 @@ FN(Tm, FS)(Num *m, Num *mc, size_t mx, size_t my) {
                 void *src = m + (x + i) * my + y;
                 regs[i] = _mm256_stream_load_si256(src);
             }
+            prefetch(m + (x + 0) * my + y + 8, lc, _MM_HINT_T0);
+            prefetch(m + (x + 1) * my + y + 8, lc, _MM_HINT_T0);
+            prefetch(m + (x + 2) * my + y + 8, lc, _MM_HINT_T0);
+            prefetch(m + (x + 3) * my + y + 8, lc, _MM_HINT_T0);
+            prefetch(m + (x + 4) * my + y + 8, lc, _MM_HINT_T0);
+            prefetch(m + (x + 5) * my + y + 8, lc, _MM_HINT_T0);
+            prefetch(m + (x + 6) * my + y + 8, lc, _MM_HINT_T0);
+            prefetch(m + (x + 7) * my + y + 8, lc, _MM_HINT_T0);
             tmp[0] = _mm256_permute2x128_si256(regs[4], regs[0], 0x3);
             tmp[1] = _mm256_permute2x128_si256(regs[5], regs[1], 0x3);
             tmp[2] = _mm256_permute2x128_si256(regs[6], regs[2], 0x3);

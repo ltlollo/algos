@@ -12,8 +12,8 @@
 #define L3 (2048 * 1024)
 #define L2 ( 256 * 1024)
 
-static float A[L2 / sizeof (float)];
-static float B[L3 / sizeof (float)];
+static _Alignas(32) float A[L2 / sizeof (float)];
+static _Alignas(32) float B[L3 / sizeof (float)];
 
 int
 test_dgemmf32_8x16x8(void) {
@@ -21,13 +21,9 @@ test_dgemmf32_8x16x8(void) {
     m = n = 8;
     k = 16;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -54,13 +50,9 @@ test_dgemmf32_16x8x8(void) {
     m = 16;
     n = k = 8;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -95,13 +87,9 @@ test_dgemmf32_8x8x16(void) {
     n = 16;
     m = k = 8;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -127,13 +115,10 @@ test_dgemmf32_8x8x8(void) {
     size_t m, k, n;
     m = n = k = 8;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
 
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -160,13 +145,9 @@ test_dgemmf32_16x8x16(void) {
     m = n = 16;
     k = 8;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -201,13 +182,9 @@ test_dgemmf32_16x16x8(void) {
     m = k = 16;
     n = 8;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -242,13 +219,9 @@ test_dgemmf32_8x16x16(void) {
     m = 8;
     k = n = 16;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -274,13 +247,9 @@ test_dgemmf32_16x16x16(void) {
     size_t m, k, n;
     m = k = n = 16;
 
-    m = align_up(m, pad(float));
-    n = align_up(n, pad(float));
-    k = align_up(k, pad(float));
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotamf32(0.f, 1.f, a, k, m);
     iotamf32(3.f, 1.f, b, n, k);
@@ -314,13 +283,9 @@ test_dgemmf32_3x3x3(void) {
     size_t m, k, n;
     m = n = k = 3;
 
-    m = align_up(m, 8);
-    n = align_up(n, 8);
-    k = align_up(k, 8);
-
-    float *a = calloc(m * k, sizeof (float));
-    float *b = calloc(k * n, sizeof (float));
-    float *c = calloc(m * n, sizeof (float));
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
 
     iotaoffmf32(0.f, 1.f, a, k, m, 0, 0, 3, 3);
     iotaoffmf32(3.f, 1.f, b, n, k, 0, 0, 3, 3);
@@ -346,8 +311,8 @@ test_Tmf32_16x24(void) {
     size_t m = 16;
     size_t n = 24;
 
-    float *a = calloc(m * n, sizeof (float));
-    float *b = calloc(n * m, sizeof (float));
+    float *a = mmallocf32(m, n);
+    float *b = mmallocf32(n, m);
 
     static float et[] = {
         0.00,   1.00,   2.00,   3.00,   4.00,   5.00,   6.00,   7.00,   8.00,   9.00,   10.00,  11.00,  12.00,  13.00,  14.00,  15.00,  16.00,  17.00,  18.00,  19.00,  20.00,  21.00,  22.00,  23.00,
@@ -381,8 +346,8 @@ test_Tmf32_24x16(void) {
     size_t m = 24;
     size_t n = 16;
 
-    float *a = calloc(m * n, sizeof (float));
-    float *b = calloc(n * m, sizeof (float));
+    float *a = mmallocf32(m, n);
+    float *b = mmallocf32(n, m);
 
     static float et[] = {
         0.00,   1.00,   2.00,   3.00,   4.00,   5.00,   6.00,   7.00,   8.00,   9.00,   10.00,  11.00,  12.00,  13.00,  14.00,  15.00,
