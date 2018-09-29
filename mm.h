@@ -7,6 +7,7 @@
 
 #define NT_MAX (64)
 
+void axpyf32(float *a, float b, float *c, size_t m);
 void dgerf32(float *a, float *b, float *restrict c, size_t m, size_t n);
 void dgemvf32(float *a, float *b, float *restrict c, size_t m, size_t n);
 void dgemmf32(float *a, float *b, float *restrict c, size_t m, size_t k,
@@ -33,6 +34,7 @@ void printvf32(float *m, size_t my);
 void printoffvTf32(float *m, size_t mx, size_t ox, size_t dx);
 void printvTf32(float *m, size_t mx);
 
+void axpyf64(double *a, double b, double *c, size_t m);
 void dgerf64(double *a, double *b, double *restrict c, size_t m, size_t n);
 void dgemvf64(double *a, double *b, double *restrict c, size_t m, size_t n);
 void dgemmf64(double *a, double *b, double *restrict c, size_t m, size_t k,

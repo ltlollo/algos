@@ -120,6 +120,21 @@ FN(dgemv, FS)(Num *a, Num *b, Num *c, size_t m, size_t n) {
 }
 
 void
+FN(axpy, FS)(Num *a, Num b, Num *c, size_t m) {
+    m = align_up(m, pad(Num));
+
+    Vec rb, ra, rc;
+
+    rb = set1(b);
+    for (size_t j = 0; j < m; j += LINE) {
+        rc = load(c + j);
+        ra = stream_load(a + j);
+        rc = fmadd(ra, rb, rc);
+        store(c + j, rc);
+    }
+}
+
+void
 FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
     Num *A, Num *B, size_t L2, size_t L3) {
     m = align_up(m, pad(Num));
