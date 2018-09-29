@@ -55,7 +55,7 @@
 #endif
 
 Num *
-FN(mmalloc, FS)(size_t m, size_t n) {
+FN(allocm, FS)(size_t m, size_t n) {
     m = align_up(m, pad(Num));
     n = align_up(n, pad(Num));
     Num *res = NULL;
@@ -70,7 +70,7 @@ FN(mmalloc, FS)(size_t m, size_t n) {
 }
 
 Num *
-FN(vmalloc, FS)(size_t m) {
+FN(allocv, FS)(size_t m) {
     m = align_up(m, pad(Num));
     Num *res = NULL;
 
@@ -97,6 +97,24 @@ FN(dger, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t n) {
             ra = stream_load(a + j);
             rc = fmadd(ra, rb, rc);
             store(c + m * i + j, rc);
+        }
+    }
+}
+
+void
+FN(dgemv, FS)(Num *a, Num *b, Num *c, size_t m, size_t n) {
+    m = align_up(m, pad(Num));
+    n = align_up(n, pad(Num));
+
+    Vec rb, ra, rc;
+
+    for (size_t i = 0; i < n; i++) {
+        rb = set1(b[i]);
+        for (size_t j = 0; j < m; j += LINE) {
+            rc = load(c + j);
+            ra = stream_load(a + m * i + j);
+            rc = fmadd(ra, rb, rc);
+            store(c + j, rc);
         }
     }
 }
@@ -341,6 +359,18 @@ FN(eqm, FS)(Num *a, Num *b, size_t my, size_t mx) {
             if (a[my * i + j] != b[my * i + j]) {
                 return -1;
             }
+        }
+    }
+    return 0;
+}
+
+int
+FN(eqv, FS)(Num *a, Num *b, size_t my) {
+    my = align_up(my, pad(Num));
+
+    for (size_t j = 0; j < my; j++) {
+        if (a[j] != b[j]) {
+            return -1;
         }
     }
     return 0;

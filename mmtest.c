@@ -21,9 +21,9 @@ test_dgemmf32_8x16x8(void) {
     m = n = 8;
     k = 16;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -50,9 +50,9 @@ test_dgemmf32_16x8x8(void) {
     m = 16;
     n = k = 8;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -87,9 +87,9 @@ test_dgemmf32_8x8x16(void) {
     n = 16;
     m = k = 8;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -116,9 +116,9 @@ test_dgemmf32_8x8x8(void) {
     m = n = k = 8;
 
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -145,9 +145,9 @@ test_dgemmf32_16x8x16(void) {
     m = n = 16;
     k = 8;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -182,9 +182,9 @@ test_dgemmf32_16x16x8(void) {
     m = k = 16;
     n = 8;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -219,9 +219,9 @@ test_dgemmf32_8x16x16(void) {
     m = 8;
     k = n = 16;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -247,9 +247,9 @@ test_dgemmf32_16x16x16(void) {
     size_t m, k, n;
     m = k = n = 16;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
@@ -283,9 +283,9 @@ test_dgemmf32_3x3x3(void) {
     size_t m, k, n;
     m = n = k = 3;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
 
     iotaoffmf32(0.f, 1.f, a, m, k, 0, 0, 3, 3);
     iotaoffmf32(3.f, 1.f, b, k, n, 0, 0, 3, 3);
@@ -311,8 +311,8 @@ test_Tmf32_16x24(void) {
     size_t m = 16;
     size_t n = 24;
 
-    float *a = mmallocf32(m, n);
-    float *b = mmallocf32(n, m);
+    float *a = allocmf32(m, n);
+    float *b = allocmf32(n, m);
 
     static float et[] = {
         0.00,   1.00,   2.00,   3.00,   4.00,   5.00,   6.00,   7.00,   8.00,   9.00,   10.00,  11.00,  12.00,  13.00,  14.00,  15.00,  16.00,  17.00,  18.00,  19.00,  20.00,  21.00,  22.00,  23.00,
@@ -346,8 +346,8 @@ test_Tmf32_24x16(void) {
     size_t m = 24;
     size_t n = 16;
 
-    float *a = mmallocf32(m, n);
-    float *b = mmallocf32(n, m);
+    float *a = allocmf32(m, n);
+    float *b = allocmf32(n, m);
 
     static float et[] = {
         0.00,   1.00,   2.00,   3.00,   4.00,   5.00,   6.00,   7.00,   8.00,   9.00,   10.00,  11.00,  12.00,  13.00,  14.00,  15.00,
@@ -389,8 +389,8 @@ test_Tmf64_24x16(void) {
     size_t m = 24;
     size_t n = 16;
 
-    double *a = mmallocf64(m, n);
-    double *b = mmallocf64(n, m);
+    double *a = allocmf64(m, n);
+    double *b = allocmf64(n, m);
 
     static double et[] = {
         0.00,   1.00,   2.00,   3.00,   4.00,   5.00,   6.00,   7.00,   8.00,   9.00,   10.00,  11.00,  12.00,  13.00,  14.00,  15.00,
@@ -432,10 +432,10 @@ test_mtdgemmf32_256x256(void) {
     size_t m, k, n;
     m = n = k = 256;
 
-    float *a = mmallocf32(m, k);
-    float *b = mmallocf32(k, n);
-    float *c = mmallocf32(m, n);
-    float *d = mmallocf32(m, n);
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
+    float *d = allocmf32(m, n);
 
     iotamf32(0.f, 0.1f, a, k, m);
     iotamf32(3.f, 0.1f, b, n, k);
@@ -451,9 +451,9 @@ test_dgerf32_16x16(void) {
     size_t m, n;
     m = n = 16;
 
-    float *a = vmallocf32(m);
-    float *b = vmallocf32(n);
-    float *c = mmallocf32(m, n);
+    float *a = allocvf32(m);
+    float *b = allocvf32(n);
+    float *c = allocmf32(m, n);
 
     static float et[] = {
         0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00,   0.00, 0.00,    0.00,   0.00,   0.00,
@@ -484,6 +484,35 @@ test_dgerf32_16x16(void) {
 }
 
 int
+test_dgemv_8x16(void) {
+    size_t m, n;
+    m = 8;
+    n = 16;
+
+    float *a = allocmf32(m, n);
+    float *b = allocvf32(n);
+    float *c = allocvf32(m);
+
+    static float e[] = {
+        12800.00,
+        12968.00,
+        13136.00,
+        13304.00,
+        13472.00,
+        13640.00,
+        13808.00,
+        13976.00
+    };
+
+    iotamf32(0.f, 1.f, a, m, n);
+    iotavf32(3.f, 1.f, b, n);
+
+    dgemvf32(a, b, c, m, n);
+
+    return eqvf32(c, e, m) == 0;
+}
+
+int
 main() {
     struct Tst {
         int (*fn)(void);
@@ -503,6 +532,7 @@ main() {
         TEST(test_Tmf64_24x16),
         TEST(test_mtdgemmf32_256x256),
         TEST(test_dgerf32_16x16),
+        TEST(test_dgemv_8x16),
         TEST(NULL),
     };
     for (struct Tst *test = tests; test->fn; test++) {
