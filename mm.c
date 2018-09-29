@@ -2,9 +2,10 @@
 // For more information, see LICENSE
 
 #include <errno.h>
+#include <immintrin.h>
+#include <pthread.h>
 #include <string.h>
 #include <stdio.h>
-#include <immintrin.h>
 
 #if !defined (SELF)
 #   include "mm.h"
@@ -20,12 +21,13 @@
                 (void)m;                \
             } while (0)
 #   endif
-#   define _u(x) ((uintptr_t)(x))
-#   define min(x, y) (_u(y) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
-#   define max(x, y) (_u(x) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
+#   define _u(x)            ((uintptr_t)(x))
+#   define min(x, y)        (_u(y) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
+#   define max(x, y)        (_u(x) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
 #   define align_down(n, p) (_u(n) & ~(p - 1))
 #   define align_up(n, p)   ((_u(n) + (p - 1)) & ~(p - 1))
-#   define pad(x) (256 / 8 / sizeof (x))
+#   define pad(x)           (256 / 8 / sizeof (x))
+#   define NT               (8)
 #endif
 
 #if !defined (F32T)
@@ -124,6 +126,87 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
                 }
             }
         }
+    }
+}
+
+struct FN(wthpar, FS) {
+    Num *a, *b, *c;
+    size_t m, k, n, _kc, nt, i, L2, L3;
+};
+
+void *
+FN(wthdgemm, FS)(void *p) {
+    struct FN(wthpar, FS) *in = p;
+
+    Num *a = in->a, *b = in->b, *c = in->c;
+    size_t m = in->m, k = in->k, n = in->n, _kc = in->_kc, nt = in->nt,
+           i = in->i, L2 = in->L2;
+    size_t xa, ya, xb, yb, xc, yc, kc, mc;
+
+    Vec ra, rb, rc[LINE];
+    Num *lc = c + m * n - LINE;
+
+    for (size_t ki = i * _kc; ki < k; ki += _kc * nt) {
+        kc = ki + _kc > k ? k - ki : _kc;
+        xa = yb = ki;
+        for (size_t j = 0; j < n; j++) {
+            for (size_t i = 0; i < kc; i += LINE) {
+                prefetch(c + kc * j + i, lc, _MM_HINT_T2);
+            }
+        }
+        size_t _mc = align_up(min(L2 / kc + 1, m), LINE);
+        for (size_t mi = 0; mi < m; mi += _mc) {
+            mc = mi + _mc > m ? align_up(m - mi, LINE) : _mc;
+            ya = yc = mi;
+            for (size_t j = 0; j < kc; j++) {
+                for (size_t i = 0; i < mc; i += LINE) {
+                    prefetch(c + m * j + yc, lc, _MM_HINT_T1);
+                }
+            }
+            for (size_t ni = 0; ni < n; ni += LINE) {
+                xc = xb = ni;
+                for (size_t oi = 0; oi < mc; oi += LINE) {
+                    for (size_t j = 0; j < LINE; j++) {
+                        Num *vc = c + m * (xc + j) + yc + oi;
+                        rc[j] = stream_load(vc);
+                        prefetch(vc + LINE, lc, _MM_HINT_T0);
+                    }
+                    for (size_t pi = 0; pi < kc; pi++) {
+                        ra = load(a + mc * (xa + pi) + oi + ya);
+                        for (size_t j = 0; j < LINE; j++) {
+                            rb = set1(b[kc * (xb + j) + pi + yb]);
+                            rc[j] = fmadd(ra, rb, rc[j]);
+                        }
+                    }
+                    for (size_t j = 0; j < LINE; j++) {
+                        stream(c + m * (xc + j) + yc + oi, rc[j]);
+                    }
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+void
+FN(mtdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
+    size_t L2, size_t L3) {
+    m = align_up(m, pad(Num));
+    k = align_up(k, pad(Num));
+    n = align_up(n, pad(Num));
+
+    size_t _kc = align_up(min(L3 / n + 1, k), LINE);
+    struct FN(wthpar, FS) wthp[8];
+    pthread_t wth[NT];
+
+    for (size_t i= 0; i < NT; i++) {
+        wthp[i] = (struct FN(wthpar, FS)) {
+            a, b, c, m, k, n, _kc, NT, i, L2, L3,
+        };
+        pthread_create( wth + i, NULL, FN(wthdgemm, FS), wthp + i);
+    }
+    for (size_t i= 0; i < NT; i++) {
+        pthread_join( wth[i], NULL);
     }
 }
 

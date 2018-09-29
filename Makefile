@@ -1,4 +1,4 @@
-CFLAGS += -march=native -Wall -Wextra -pedantic
+CFLAGS += -march=native -Wall -Wextra -pedantic -pthread
 LDFLAGS += -Wl,--gc-sections
 REL_CFLAGS = ${CFLAGS}  -s -Ofast -funroll-all-loops -minline-all-stringops \
 	-ffunction-sections -fdata-sections

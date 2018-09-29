@@ -34,6 +34,23 @@ bench_dgemmf32_256x256(size_t times) {
 }
 
 void
+bench_mtdgemmf32_256x256(size_t times) {
+    size_t m, k, n;
+    m = n = k = 256;
+
+    float *a = mmallocf32(m, k);
+    float *b = mmallocf32(k, n);
+    float *c = mmallocf32(m, n);
+
+    iotamf32(0.f, 0.1f, a, k, m);
+    iotamf32(3.f, 0.1f, b, n, k);
+
+    for (size_t i = 0; i < times; i++) {
+        mtdgemmf32(a, b, c, m, k, n, L2, L3);
+    }
+}
+
+void
 bench_Tmf32_256x256(size_t times) {
     size_t m, n;
     m = n = 256;
@@ -55,6 +72,7 @@ main() {
         const char *wh;
         size_t times;
     } benchs[] = {
+        BENCH(bench_mtdgemmf32_256x256, 1<<13),
         BENCH(bench_dgemmf32_256x256, 1<<13),
         BENCH(bench_Tmf32_256x256, 1<<13),
         BENCH(NULL, 0),
