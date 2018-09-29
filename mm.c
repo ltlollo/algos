@@ -206,7 +206,6 @@ FN(mtdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
     struct FN(wthpar, FS) wthp[NT_MAX];
     pthread_t wth[NT_MAX];
 
-
     for (size_t i = 0; i < nt; i++) {
         wthp[i] = (struct FN(wthpar, FS)) {
             a, b, c, m, k, n, _kc, nt, i, L2, L3,
