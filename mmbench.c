@@ -46,7 +46,7 @@ bench_mtdgemmf32_256x256(size_t times) {
     iotamf32(3.f, 0.1f, b, n, k);
 
     for (size_t i = 0; i < times; i++) {
-        mtdgemmf32(a, b, c, m, k, n, L2, L3);
+        mtdgemmf32(a, b, c, m, k, n, L2, L3, 8);
     }
 }
 

@@ -441,7 +441,7 @@ test_mtdgemmf32_256x256(void) {
     iotamf32(3.f, 0.1f, b, n, k);
 
     dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
-    mtdgemmf32(a, b, d, m, k, n, L2, L3);
+    mtdgemmf32(a, b, d, m, k, n, L2, L3, 8);
 
     return eqmf32(c, d, m, n) == 0;
 }

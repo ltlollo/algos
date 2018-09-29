@@ -190,22 +190,24 @@ FN(wthdgemm, FS)(void *p) {
 
 void
 FN(mtdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
-    size_t L2, size_t L3) {
+    size_t L2, size_t L3, size_t nt) {
     m = align_up(m, pad(Num));
     k = align_up(k, pad(Num));
     n = align_up(n, pad(Num));
+    nt = min(nt, NT_MAX);
 
     size_t _kc = align_up(min(L3 / n + 1, k), LINE);
-    struct FN(wthpar, FS) wthp[8];
-    pthread_t wth[NT];
+    struct FN(wthpar, FS) wthp[NT_MAX];
+    pthread_t wth[NT_MAX];
 
-    for (size_t i= 0; i < NT; i++) {
+
+    for (size_t i = 0; i < nt; i++) {
         wthp[i] = (struct FN(wthpar, FS)) {
-            a, b, c, m, k, n, _kc, NT, i, L2, L3,
+            a, b, c, m, k, n, _kc, nt, i, L2, L3,
         };
         pthread_create( wth + i, NULL, FN(wthdgemm, FS), wthp + i);
     }
-    for (size_t i= 0; i < NT; i++) {
+    for (size_t i= 0; i < nt; i++) {
         pthread_join( wth[i], NULL);
     }
 }
@@ -218,10 +220,10 @@ FN(printoffm, FS)(Num *m, size_t mx, size_t my, size_t ox, size_t oy,
 
     for (size_t y = oy; y < oy + dy; y++) {
         for (size_t x = ox; x < ox + dx; x++) {
-            printf("%0.2f,\t", m[my * x + y]);
-        } 
+            printf("%.3e,\t", m[my * x + y]);
+        }
         printf("\n");
-    } 
+    }
     printf("\n");
 }
 
@@ -239,8 +241,8 @@ FN(iotaoffm, FS)(Num v, Num d, Num *m, size_t my, size_t mx, size_t oy,
     for (size_t x = ox; x < ox + dx; x++) {
         for (size_t y = oy; y < oy + dy; y++, v += d) {
             m[my * x + y] = v;
-        } 
-    } 
+        }
+    }
 }
 
 void
