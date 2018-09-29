@@ -106,25 +106,17 @@ FN(dgemv, FS)(Num *a, Num *b, Num *c, size_t m, size_t n) {
     m = align_up(m, pad(Num));
     n = align_up(n, pad(Num));
 
-    Num *la = a + m * n - LINE;
-#define N 2
-    Vec rb[N], ra[N], rc;
+    Vec rb, ra, rc;
 
-    for (size_t i = 0; i < n; i += N) {
-        for (size_t k = 0; k < N; k++) {
-            rb[k] = set1(b[i + k]);
-        }
+    for (size_t i = 0; i < n; i++) {
+        rb = set1(b[i]);
         for (size_t j = 0; j < m; j += LINE) {
             rc = load(c + j);
-            for (size_t k = 0; k < N; k++) {
-                ra[k] = stream_load(a + m * (i + k) + j);
-                rc = fmadd(ra[k], rb[k], rc);
-                prefetch(a + m * (i + k) + j + LINE, la, _MM_HINT_T0);
-            }
+            ra = stream_load(a + m * i + j);
+            rc = fmadd(ra, rb, rc);
             store(c + j, rc);
         }
     }
-#undef N
 }
 
 void

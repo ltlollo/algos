@@ -99,7 +99,7 @@ main() {
         BENCH(bench_mtdgemmf32_256x256, 1<<12),
         BENCH(bench_dgemmf32_256x256, 1<<11),
         BENCH(bench_Tmf32_256x256, 1<<15),
-        BENCH(bench_Tmf32_256x256, 1<<14),
+        BENCH(bench_dgemv_256x256, 1<<14),
         BENCH(NULL, 0),
     };
 
