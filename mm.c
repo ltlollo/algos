@@ -38,7 +38,7 @@
 #   define fmadd    _mm256_fmadd_ps
 #   define store    _mm256_store_ps
 #   define load     _mm256_load_ps
-#   define stream   _mm256_store_ps
+#   define stream   _mm256_stream_ps
 #   define FS       f32
 #   define F32T
 #elif !defined (F64T)
@@ -153,7 +153,7 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
                         }
                     }
                     for (size_t j = 0; j < LINE; j++) {
-                        stream(c + m * (xc + j) + yc + oi, rc[j]);
+                        store(c + m * (xc + j) + yc + oi, rc[j]);
                     }
                 }
             }
@@ -217,7 +217,7 @@ FN(wthdgemm, FS)(void *p) {
                         }
                     }
                     for (size_t j = 0; j < LINE; j++) {
-                        stream(c + m * (xc + j) + yc + oi, rc[j]);
+                        store(c + m * (xc + j) + yc + oi, rc[j]);
                     }
                 }
             }
@@ -429,7 +429,7 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t my, size_t mx) {
 
             for (size_t i = 0; i < 8; i++) {
                 Num *src = mc + (y + i) * mx + x;
-                stream(src, (Vec) regs[i]);
+                store(src, (Vec) regs[i]);
             }
         }
     }
@@ -472,7 +472,7 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t my, size_t mx) {
 
             for (size_t i = 0; i < LINE; i++) {
                 Num *src = mc + (y + i) * mx + x;
-                stream(src, (Vec) regs[i]);
+                store(src, (Vec) regs[i]);
             }
         }
     }
