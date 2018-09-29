@@ -119,6 +119,29 @@ FN(dgemv, FS)(Num *a, Num *b, Num *c, size_t m, size_t n) {
     }
 }
 
+#ifndef F64T
+float
+FN(hadd, FS)(__m256 in) {
+    __m128 lo, hi, sv;
+    lo = _mm256_castps256_ps128(in);
+    hi = _mm256_extractf128_ps(in, 1);
+    sv = _mm_add_ps(lo, hi);
+    sv = _mm_hadd_ps(sv, sv);
+    sv = _mm_hadd_ps(sv, sv);
+    return _mm_cvtss_f32(sv);
+}
+#else
+double
+FN(hadd, FS)(__m256d in) {
+    __m128d lo, hi, sv;
+    lo = _mm256_castpd256_pd128(in);
+    hi = _mm256_extractf128_pd(in, 1);
+    sv = _mm_add_pd(lo, hi);
+    sv = _mm_hadd_pd(sv, sv);
+    return _mm_cvtsd_f64(sv);
+}
+#endif
+
 void
 FN(axpy, FS)(Num *a, Num b, Num *c, size_t m) {
     m = align_up(m, pad(Num));
@@ -127,11 +150,25 @@ FN(axpy, FS)(Num *a, Num b, Num *c, size_t m) {
 
     rb = set1(b);
     for (size_t j = 0; j < m; j += LINE) {
-        rc = load(c + j);
+        rc = stream_load(c + j);
         ra = stream_load(a + j);
         rc = fmadd(ra, rb, rc);
         store(c + j, rc);
     }
+}
+
+Num
+FN(dot, FS)(Num *a, Num *b, size_t m) {
+    m = align_up(m, pad(Num));
+
+    Vec rb, ra, rc = set1(0);
+
+    for (size_t j = 0; j < m; j += LINE) {
+        ra = stream_load(a + j);
+        rb = stream_load(b + j);
+        rc = fmadd(ra, rb, rc);
+    }
+    return FN(hadd, FS)(rc);
 }
 
 void

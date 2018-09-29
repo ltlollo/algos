@@ -513,7 +513,7 @@ test_dgemv_8x16(void) {
 }
 
 int
-test_axpy_16(void) {
+test_axpyf32_16(void) {
     size_t m;
     m = 16;
 
@@ -548,6 +548,24 @@ test_axpy_16(void) {
 }
 
 int
+test_dotf32_16(void) {
+    size_t m;
+    m = 16;
+
+    float *a = allocvf32(m);
+    float *b = allocvf32(m);
+
+    static float e = 1600;
+
+    iotavf32(0.f, 1.f, a, m);
+    iotavf32(3.f, 1.f, b, m);
+
+    float c = dotf32(a, b, m);
+
+    return e == c;
+}
+
+int
 main() {
     struct Tst {
         int (*fn)(void);
@@ -568,7 +586,8 @@ main() {
         TEST(test_mtdgemmf32_256x256),
         TEST(test_dgerf32_16x16),
         TEST(test_dgemv_8x16),
-        TEST(test_axpy_16),
+        TEST(test_axpyf32_16),
+        TEST(test_dotf32_16),
         TEST(NULL),
     };
     for (struct Tst *test = tests; test->fn; test++) {
