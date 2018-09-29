@@ -17,10 +17,10 @@ mmbench: mmrel
 	@./mmbench
 
 mmdbg:
-	$(CC) ${LDFLAGS} ${DBG_CFLAGS} -c mm.c
+	$(CC) ${DBG_CFLAGS} -c mm.c
 
 mmrel:
-	$(CC) ${LDFLAGS} ${REL_CFLAGS} -c mm.c
+	$(CC) ${REL_CFLAGS} -c mm.c
 
 clean:
 	rm -f *.o mmtests

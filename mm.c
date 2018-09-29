@@ -1,15 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 // For more information, see LICENSE
+
+#include <errno.h>
 #include <string.h>
 #include <stdio.h>
 #include <immintrin.h>
 
 #if !defined (SELF)
-#define SELF
 #   include "mm.h"
-#   define FN_(a, b)    a##b
-#   define FN(a, b)     FN_(a, b)
-#   define stream_load  (Vec) _mm256_stream_load_si256
+#   define FN_(a, b)        a##b
+#   define FN(a, b)         FN_(a, b)
+#   define stream_load(a)   (Vec) _mm256_stream_load_si256((void *)a)
 #   ifdef BOUND_PREFETCH
 #       define prefetch(a, m, h) _mm_prefetch((void *)min(a, b), h)
 #   else
@@ -26,8 +27,6 @@
 #   define align_up(n, p)   ((_u(n) + (p - 1)) & ~(p - 1))
 #   define pad(x) (256 / 8 / sizeof (x))
 #endif
-
-
 
 #if !defined (F32T)
 #   define LINE     (8)
@@ -57,17 +56,20 @@ Num *
 FN(mmalloc, FS)(size_t m, size_t n) {
     m = align_up(m, pad(Num));
     n = align_up(n, pad(Num));
+    Num *res = NULL;
 
-    Num *res = aligned_alloc(32, m * n * sizeof (Num));
-    if (res) {
+    if (m  > (SIZE_MAX - 32) / sizeof (Num) / n) {
+        errno = ENOMEM;
+    }
+    if ((res = aligned_alloc(32, m * n * sizeof (Num)))) {
         memset(res, 0, m * n * sizeof (Num));
     }
     return res;
 }
 
 void
-FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n, Num *A,
-    Num *B, size_t L2, size_t L3) {
+FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
+    Num *A, Num *B, size_t L2, size_t L3) {
     m = align_up(m, pad(Num));
     k = align_up(k, pad(Num));
     n = align_up(n, pad(Num));
@@ -83,7 +85,7 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n, Num
 
         for (size_t j = 0; j < n; j++) {
             for (size_t i = 0; i < kc; i += LINE) {
-                void *vb = b + k * j + yb + i;
+                Num *vb = b + k * j + yb + i;
                 rb = stream_load(vb);
                 store(B + kc * j + i, rb);
                 prefetch(c + kc * j + i, lc, _MM_HINT_T2);
@@ -95,7 +97,7 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n, Num
             ya = yc = mi;
             for (size_t j = 0; j < kc; j++) {
                 for (size_t i = 0; i < mc; i += LINE) {
-                    void *va = a + (xa + j) * m + (ya + i);
+                    Num *va = a + (xa + j) * m + (ya + i);
                     ra = stream_load(va);
                     store(A + mc * j + i, ra);
                     prefetch(c + m * j + yc, lc, _MM_HINT_T1);
@@ -105,9 +107,9 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n, Num
                 xc = xb = ni;
                 for (size_t oi = 0; oi < mc; oi += LINE) {
                     for (size_t j = 0; j < LINE; j++) {
-                        void *vc = c + m * (xc + j) + yc + oi;
+                        Num *vc = c + m * (xc + j) + yc + oi;
                         rc[j] = stream_load(vc);
-                        prefetch(c + m * (xc + j) + yc + oi + 8, lc, _MM_HINT_T0);
+                        prefetch(vc + LINE, lc, _MM_HINT_T0);
                     }
                     for (size_t pi = 0; pi < kc; pi++) {
                         ra = load(A + mc * pi + oi);
@@ -141,13 +143,13 @@ FN(printoffm, FS)(Num *m, size_t mx, size_t my, size_t ox, size_t oy,
 }
 
 void
-FN(printm, FS)(Num *m, size_t mx, size_t my) {
-    FN(printoffm, FS)(m, mx, my, 0, 0, mx, my);
+FN(printm, FS)(Num *m, size_t my, size_t mx) {
+    FN(printoffm, FS)(m, my, mx, 0, 0, my, mx);
 }
 
 void
-FN(iotaoffm, FS)(Num v, Num d, Num *m, size_t mx, size_t my, size_t ox,
-    size_t oy, size_t dx, size_t dy) {
+FN(iotaoffm, FS)(Num v, Num d, Num *m, size_t my, size_t mx, size_t oy,
+    size_t ox, size_t dy, size_t dx) {
     mx = align_up(mx, pad(Num));
     my = align_up(my, pad(Num));
 
@@ -159,18 +161,18 @@ FN(iotaoffm, FS)(Num v, Num d, Num *m, size_t mx, size_t my, size_t ox,
 }
 
 void
-FN(iotam, FS)(Num v, Num d, Num *m, size_t mx, size_t my) {
-    FN(iotaoffm, FS)(v, d, m, mx, my, 0, 0, mx, my);
+FN(iotam, FS)(Num v, Num d, Num *m, size_t my, size_t mx) {
+    FN(iotaoffm, FS)(v, d, m, my, mx, 0, 0, my, mx);
 }
 
 int
-FN(eqm, FS)(Num *a, Num *b, size_t x, size_t y) {
-    x = align_up(x, pad(Num));
-    y = align_up(y, pad(Num));
+FN(eqm, FS)(Num *a, Num *b, size_t my, size_t mx) {
+    mx = align_up(mx, pad(Num));
+    my = align_up(my, pad(Num));
 
-    for (size_t i = 0; i < x; i++) {
-        for (size_t j = 0; j < y; j++) {
-            if (a[y * i + j] != b[y * i + j]) {
+    for (size_t i = 0; i < mx; i++) {
+        for (size_t j = 0; j < my; j++) {
+            if (a[my * i + j] != b[my * i + j]) {
                 return -1;
             }
         }
@@ -179,7 +181,7 @@ FN(eqm, FS)(Num *a, Num *b, size_t x, size_t y) {
 }
 
 void
-FN(chordm, FS)(Num *mt, Num *restrict m, size_t mx, size_t my) {
+FN(chordm, FS)(Num *mt, Num *restrict m, size_t my, size_t mx) {
     mx = align_up(mx, pad(Num));
     my = align_up(my, pad(Num));
 
@@ -191,28 +193,24 @@ FN(chordm, FS)(Num *mt, Num *restrict m, size_t mx, size_t my) {
     }
 }
 
+#ifndef F64T
 void
-FN(Tm, FS)(Num *m, Num *restrict mc, size_t mx, size_t my) {
+FN(Tm, FS)(Num *m, Num *restrict mc, size_t my, size_t mx) {
     mx = align_up(mx, pad(Num));
     my = align_up(my, pad(Num));
     Num *lc = m + mx * my - LINE;
 
     __m256i regs[8];
     __m256i tmp[8];
-    for (size_t x = 0; x < mx; x += 8) {
-        for (size_t y = 0; y < my; y += 8) {
-            for (size_t i = 0; i < 8; i++) {
+    for (size_t x = 0; x < mx; x += LINE) {
+        for (size_t y = 0; y < my; y += LINE) {
+            for (size_t i = 0; i < LINE; i++) {
                 void *src = m + (x + i) * my + y;
                 regs[i] = _mm256_stream_load_si256(src);
             }
-            prefetch(m + (x + 0) * my + y + 8, lc, _MM_HINT_T0);
-            prefetch(m + (x + 1) * my + y + 8, lc, _MM_HINT_T0);
-            prefetch(m + (x + 2) * my + y + 8, lc, _MM_HINT_T0);
-            prefetch(m + (x + 3) * my + y + 8, lc, _MM_HINT_T0);
-            prefetch(m + (x + 4) * my + y + 8, lc, _MM_HINT_T0);
-            prefetch(m + (x + 5) * my + y + 8, lc, _MM_HINT_T0);
-            prefetch(m + (x + 6) * my + y + 8, lc, _MM_HINT_T0);
-            prefetch(m + (x + 7) * my + y + 8, lc, _MM_HINT_T0);
+            for (size_t i = 0; i < LINE; i++) {
+                prefetch(m + (x + i) * my + y + LINE, lc, _MM_HINT_T0);
+            }
             tmp[0] = _mm256_permute2x128_si256(regs[4], regs[0], 0x3);
             tmp[1] = _mm256_permute2x128_si256(regs[5], regs[1], 0x3);
             tmp[2] = _mm256_permute2x128_si256(regs[6], regs[2], 0x3);
@@ -245,7 +243,6 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t mx, size_t my) {
             regs[6] = _mm256_blend_epi32(regs[6], tmp[4], 0x33);
             regs[7] = _mm256_blend_epi32(regs[7], tmp[5], 0x33);
 
-#ifndef F64T
             tmp[0] = _mm256_shuffle_epi32(regs[0], 0x31);
             tmp[1] = _mm256_shuffle_epi32(regs[1], 0x80);
             tmp[2] = _mm256_shuffle_epi32(regs[2], 0x31);
@@ -263,14 +260,58 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t mx, size_t my) {
             regs[5] = _mm256_blend_epi32(regs[5], tmp[4], 0x55);
             regs[6] = _mm256_blend_epi32(regs[6], tmp[7], 0xaa);
             regs[7] = _mm256_blend_epi32(regs[7], tmp[6], 0x55);
-#endif
+
             for (size_t i = 0; i < 8; i++) {
-                void *src = mc + (y + i) * mx + x;
+                Num *src = mc + (y + i) * mx + x;
                 stream(src, (Vec) regs[i]);
             }
         }
     }
 }
+#else
+void
+FN(Tm, FS)(Num *m, Num *restrict mc, size_t my, size_t mx) {
+    mx = align_up(mx, pad(Num));
+    my = align_up(my, pad(Num));
+    Num *lc = m + mx * my - LINE;
+
+    __m256i regs[LINE];
+    __m256i tmp[LINE];
+    for (size_t x = 0; x < mx; x += LINE) {
+        for (size_t y = 0; y < my; y += LINE) {
+            for (size_t i = 0; i < LINE; i++) {
+                void *src = m + (x + i) * my + y;
+                regs[i] = _mm256_stream_load_si256(src);
+            }
+            for (size_t i = 0; i < LINE; i++) {
+                prefetch(m + (x + i) * my + y + LINE, lc, _MM_HINT_T0);
+            }
+            tmp[0] = _mm256_permute2x128_si256(regs[2], regs[0], 0x3);
+            tmp[1] = _mm256_permute2x128_si256(regs[3], regs[1], 0x3);
+
+            regs[0] = _mm256_blend_epi32(regs[0], tmp[0], 0xf0);
+            regs[2] = _mm256_blend_epi32(regs[2], tmp[0], 0x0f);
+            regs[1] = _mm256_blend_epi32(regs[1], tmp[1], 0xf0);
+            regs[3] = _mm256_blend_epi32(regs[3], tmp[1], 0x0f);
+
+            tmp[0] = _mm256_shuffle_epi32(regs[0], 0x0e);
+            tmp[1] = _mm256_shuffle_epi32(regs[1], 0x40);
+            tmp[2] = _mm256_shuffle_epi32(regs[2], 0x0e);
+            tmp[3] = _mm256_shuffle_epi32(regs[3], 0x40);
+
+            regs[0] = _mm256_blend_epi32(regs[0], tmp[1], 0xcc);
+            regs[1] = _mm256_blend_epi32(regs[1], tmp[0], 0x33);
+            regs[2] = _mm256_blend_epi32(regs[2], tmp[3], 0xcc);
+            regs[3] = _mm256_blend_epi32(regs[3], tmp[2], 0x33);
+
+            for (size_t i = 0; i < LINE; i++) {
+                Num *src = mc + (y + i) * mx + x;
+                stream(src, (Vec) regs[i]);
+            }
+        }
+    }
+}
+#endif
 
 #undef LINE
 #undef Num
@@ -281,6 +322,7 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t mx, size_t my) {
 #undef load
 #undef stream
 #undef FS
+#define SELF
 
 #if !defined (F64T)
 #   include __FILE__

@@ -66,7 +66,7 @@ main() {
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
         float ts = ((end.tv_sec * 1000000000 + end.tv_nsec) -
             (beg.tv_sec * 1000000000 + beg.tv_nsec)) * 1e-6;
-        printf("[%s]: time: %f ms, niter: %ld, rate: %f ms/niter\n", bench->wh,
+        printf("[%s]: time: %f ms, n: %ld iter, rate: %f ms/iter\n", bench->wh,
             ts, bench->times, ts / bench->times);
     }
 }
