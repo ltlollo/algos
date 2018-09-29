@@ -145,12 +145,16 @@ FN(wthdgemm, FS)(void *p) {
 
     Vec ra, rb, rc[LINE];
     Num *lc = c + m * n - LINE;
+    Num *la = a + m * k - LINE;
+    Num *lb = b + k * n - LINE;
 
     for (size_t ki = i * _kc; ki < k; ki += _kc * nt) {
         kc = ki + _kc > k ? k - ki : _kc;
         xa = yb = ki;
         for (size_t j = 0; j < n; j++) {
             for (size_t i = 0; i < kc; i += LINE) {
+                Num *vb = b + k * j + yb + i;
+                prefetch(vb, lb, _MM_HINT_T2);
                 prefetch(c + kc * j + i, lc, _MM_HINT_T2);
             }
         }
@@ -160,6 +164,8 @@ FN(wthdgemm, FS)(void *p) {
             ya = yc = mi;
             for (size_t j = 0; j < kc; j++) {
                 for (size_t i = 0; i < mc; i += LINE) {
+                    Num *va = a + (xa + j) * m + (ya + i);
+                    prefetch(va, la, _MM_HINT_T1);
                     prefetch(c + m * j + yc, lc, _MM_HINT_T1);
                 }
             }

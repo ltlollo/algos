@@ -25,8 +25,8 @@ bench_dgemmf32_256x256(size_t times) {
     float *b = mmallocf32(k, n);
     float *c = mmallocf32(m, n);
 
-    iotamf32(0.f, 0.1f, a, k, m);
-    iotamf32(3.f, 0.1f, b, n, k);
+    iotamf32(0.f, 0.1f, a, m, k);
+    iotamf32(3.f, 0.1f, b, k, n);
 
     for (size_t i = 0; i < times; i++) {
         dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
@@ -42,8 +42,8 @@ bench_mtdgemmf32_256x256(size_t times) {
     float *b = mmallocf32(k, n);
     float *c = mmallocf32(m, n);
 
-    iotamf32(0.f, 0.1f, a, k, m);
-    iotamf32(3.f, 0.1f, b, n, k);
+    iotamf32(0.f, 0.1f, a, m, k);
+    iotamf32(3.f, 0.1f, b, k, n);
 
     for (size_t i = 0; i < times; i++) {
         mtdgemmf32(a, b, c, m, k, n, L2, L3, 8);
