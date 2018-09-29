@@ -11,21 +11,21 @@
 #   include "mm.h"
 #   define FN_(a, b)        a##b
 #   define FN(a, b)         FN_(a, b)
-#   define stream_load(a)   (Vec) _mm256_stream_load_si256((void *)a)
+#   define stream_load(a)   (Vec) _mm256_stream_load_si256((void *)(a))
 #   ifdef BOUND_PREFETCH
-#       define prefetch(a, m, h) _mm_prefetch((void *)min(a, b), h)
+#       define prefetch(a, m, h) _mm_prefetch((void *)min(a, b), (h))
 #   else
 #       define prefetch(a, m, h)        \
             do {                        \
-                _mm_prefetch(a, h);     \
-                (void)m;                \
+                _mm_prefetch((a), (h)); \
+                (void)(m);              \
             } while (0)
 #   endif
 #   define _u(x)            ((uintptr_t)(x))
 #   define min(x, y)        (_u(y) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
 #   define max(x, y)        (_u(x) ^ ((_u(x) ^ _u(y)) & -(_u(x) < _u(y))))
-#   define align_down(n, p) (_u(n) & ~(p - 1))
-#   define align_up(n, p)   ((_u(n) + (p - 1)) & ~(p - 1))
+#   define align_down(n, p) (_u(n) & ~((p) - 1))
+#   define align_up(n, p)   ((_u(n) + ((p) - 1)) & ~((p) - 1))
 #   define pad(x)           (256 / 8 / sizeof (x))
 #   define NT               (8)
 #endif
@@ -67,6 +67,38 @@ FN(mmalloc, FS)(size_t m, size_t n) {
         memset(res, 0, m * n * sizeof (Num));
     }
     return res;
+}
+
+Num *
+FN(vmalloc, FS)(size_t m) {
+    m = align_up(m, pad(Num));
+    Num *res = NULL;
+
+    if (m  > (SIZE_MAX - 32) / sizeof (Num)) {
+        errno = ENOMEM;
+    }
+    if ((res = aligned_alloc(32, m * sizeof (Num)))) {
+        memset(res, 0, m * sizeof (Num));
+    }
+    return res;
+}
+
+void
+FN(dger, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t n) {
+    m = align_up(m, pad(Num));
+    n = align_up(n, pad(Num));
+
+    Vec rb, ra, rc;
+
+    for (size_t i = 0; i < n; i++) {
+        rb = set1(b[i]);
+        for (size_t j = 0; j < m; j += LINE) {
+            rc = stream_load(c + m * i + j);
+            ra = stream_load(a + j);
+            rc = fmadd(ra, rb, rc);
+            store(c + m * i + j, rc);
+        }
+    }
 }
 
 void
@@ -218,14 +250,43 @@ FN(mtdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
 }
 
 void
-FN(printoffm, FS)(Num *m, size_t mx, size_t my, size_t ox, size_t oy,
-    size_t dx, size_t dy) {
+FN(printoffvT, FS)(Num *m, size_t mx, size_t ox, size_t dx) {
+    mx = align_up(mx, pad(Num));
+
+    for (size_t x = ox; x < ox + dx; x++) {
+        printf("%.2f,\t", m[x]);
+    }
+    printf("\n");
+}
+
+void
+FN(printvT, FS)(Num *m, size_t mx) {
+    FN(printoffvT, FS)(m, mx, 0, mx);
+}
+
+void
+FN(printoffv, FS)(Num *m, size_t my, size_t oy, size_t dy) {
+    my = align_up(my, pad(Num));
+
+    for (size_t y = oy; y < oy + dy; y++) {
+        printf("%.2f,\n", m[y]);
+    }
+}
+
+void
+FN(printv, FS)(Num *m, size_t my) {
+    FN(printoffv, FS)(m, my, 0, my);
+}
+
+void
+FN(printoffm, FS)(Num *m, size_t my, size_t mx, size_t oy, size_t ox,
+    size_t dy, size_t dx) {
     mx = align_up(mx, pad(Num));
     my = align_up(my, pad(Num));
 
     for (size_t y = oy; y < oy + dy; y++) {
         for (size_t x = ox; x < ox + dx; x++) {
-            printf("%.3e,\t", m[my * x + y]);
+            printf("%.2f,\t", m[my * x + y]);
         }
         printf("\n");
     }
@@ -236,6 +297,21 @@ void
 FN(printm, FS)(Num *m, size_t my, size_t mx) {
     FN(printoffm, FS)(m, my, mx, 0, 0, my, mx);
 }
+
+void
+FN(iotaoffv, FS)(Num v, Num d, Num *m, size_t my, size_t oy, size_t dy) {
+    my = align_up(my, pad(Num));
+
+    for (size_t y = oy; y < oy + dy; y++, v += d) {
+        m[y] = v;
+    }
+}
+
+void
+FN(iotav, FS)(Num v, Num d, Num *m, size_t my) {
+    FN(iotaoffv, FS)(v, d, m, my, 0, my);
+}
+
 
 void
 FN(iotaoffm, FS)(Num v, Num d, Num *m, size_t my, size_t mx, size_t oy,
