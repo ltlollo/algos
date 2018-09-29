@@ -9,12 +9,18 @@
 #include <time.h>
 #include "mm.h"
 
-#define BENCH(x, t) {x, ""#x, t }
+#define BENCH(x, t) {x, ""#x, (t) }
 #define L3 (2048 * 1024)
 #define L2 ( 256 * 1024)
 
 static _Alignas(32) float A[L2 / sizeof (float)];
 static _Alignas(32) float B[L3 / sizeof (float)];
+
+struct benchpar {
+    float *a, b, c;
+    size_t m, k, n, l2, l3;
+    size_t times;
+};
 
 void
 bench_dgemmf32_256x256(size_t times) {
@@ -65,6 +71,24 @@ bench_Tmf32_256x256(size_t times) {
     }
 }
 
+void
+bench_dgemv_256x256(size_t times) {
+    size_t m, n;
+    m = 400;
+    n = 400;
+
+    float *a = allocmf32(m, n);
+    float *b = allocvf32(n);
+    float *c = allocvf32(m);
+
+    iotamf32(0.f, 0.1f, a, m, n);
+    iotavf32(3.f, 0.1f, b, n);
+
+    for (size_t i = 0; i < times; i++) {
+        dgemvf32(a, b, c, m, n);
+    }
+}
+
 int
 main() {
     struct Bnc {
@@ -72,11 +96,13 @@ main() {
         const char *wh;
         size_t times;
     } benchs[] = {
-        BENCH(bench_mtdgemmf32_256x256, 1<<13),
-        BENCH(bench_dgemmf32_256x256, 1<<13),
-        BENCH(bench_Tmf32_256x256, 1<<13),
+        BENCH(bench_mtdgemmf32_256x256, 1<<12),
+        BENCH(bench_dgemmf32_256x256, 1<<11),
+        BENCH(bench_Tmf32_256x256, 1<<15),
+        BENCH(bench_Tmf32_256x256, 1<<14),
         BENCH(NULL, 0),
     };
+
     struct timespec beg, end;
     for (struct Bnc *bench = benchs; bench->fn; bench++) {
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &beg);
