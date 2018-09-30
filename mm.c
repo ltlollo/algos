@@ -195,7 +195,7 @@ FN(dot, FS)(Num *a, Num *b, size_t m) {
 }
 
 void
-FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
+FN(pkdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
     Num *A, Num *B, size_t L2, size_t L3) {
     m = align_up(m, pad(Num));
     k = align_up(k, pad(Num));
@@ -319,6 +319,20 @@ FN(wthdgemm, FS)(void *p) {
         }
     }
     return NULL;
+}
+
+void
+FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
+    size_t L2, size_t L3) {
+    m = align_up(m, pad(Num));
+    k = align_up(k, pad(Num));
+    n = align_up(n, pad(Num));
+
+    size_t _kc = align_up(min(L3 / n + 1, k), LINE);
+    struct FN(wthpar, FS) wthp = {
+        a, b, c, m, k, n, _kc, 1, 0, L2, L3,
+    };
+    FN(wthdgemm, FS)(&wthp);
 }
 
 void

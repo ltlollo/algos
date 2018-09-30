@@ -14,6 +14,8 @@ float dotf32(float *a, float *b, size_t m);
 void dgerf32(float *a, float *b, float *restrict c, size_t m, size_t n);
 void dgemvf32(float *a, float *b, float *restrict c, size_t m, size_t n);
 void dgemmf32(float *a, float *b, float *restrict c, size_t m, size_t k,
+    size_t n, size_t L2, size_t L3);
+void pkdgemmf32(float *a, float *b, float *restrict c, size_t m, size_t k,
     size_t n, float *A, float *B, size_t L2, size_t L3);
 void mtdgemmf32(float *a, float *b, float *restrict c, size_t m, size_t k,
     size_t n, size_t L2, size_t L3, size_t nt);
@@ -42,6 +44,8 @@ double dotf64(double *a, double *b, size_t m);
 void dgerf64(double *a, double *b, double *restrict c, size_t m, size_t n);
 void dgemvf64(double *a, double *b, double *restrict c, size_t m, size_t n);
 void dgemmf64(double *a, double *b, double *restrict c, size_t m, size_t k,
+    size_t n, size_t L2, size_t L3);
+void pkdgemmf64(double *a, double *b, double *restrict c, size_t m, size_t k,
     size_t n, double *A, double *B, size_t L2, size_t L3);
 void mtdgemmf64(double *a, double *b, double *restrict c, size_t m, size_t k,
     size_t n, size_t L2, size_t L3, size_t nt);

@@ -28,7 +28,7 @@ test_dgemmf32_8x16x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         12800,  28160,  43520,  58880,  74240,  89600,  104960, 120320,
@@ -57,7 +57,7 @@ test_dgemmf32_16x8x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         3584,   7168,   10752,  14336,  17920,  21504,  25088,  28672,
@@ -94,7 +94,7 @@ test_dgemmf32_8x8x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         1792,   3584,   5376,   7168,   8960,   10752,  12544,  14336,  16128,  17920,  19712,  21504,23296,   25088,  26880,  28672,
@@ -123,7 +123,7 @@ test_dgemmf32_8x8x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         1792,   3584,   5376,   7168,   8960,   10752,  12544,  14336,
@@ -152,7 +152,7 @@ test_dgemmf32_16x8x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         3584,   7168,   10752,  14336,  17920,  21504,  25088,  28672,  32256,  35840,  39424,  43008, 46592,  50176,  53760,  57344,
@@ -189,7 +189,7 @@ test_dgemmf32_16x16x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         25600,  56320,  87040,  117760, 148480, 179200, 209920, 240640,
@@ -226,7 +226,7 @@ test_dgemmf32_8x16x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         12800,  28160,  43520,  58880,  74240,  89600,  104960, 120320, 135680, 151040, 166400, 181760, 197120, 212480, 227840, 243200,
@@ -254,7 +254,7 @@ test_dgemmf32_16x16x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         25600,  56320,  87040,  117760, 148480, 179200, 209920, 240640, 271360, 302080, 332800, 363520, 394240, 424960, 455680, 486400,
@@ -290,7 +290,7 @@ test_dgemmf32_3x3x3(void) {
     iotaoffmf32(0.f, 1.f, a, m, k, 0, 0, 3, 3);
     iotaoffmf32(3.f, 1.f, b, k, n, 0, 0, 3, 3);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
         42,     69,     96,     0,      0,      0,      0,      0,
@@ -440,7 +440,26 @@ test_mtdgemmf32_256x256(void) {
     iotamf32(0.f, 0.1f, a, k, m);
     iotamf32(3.f, 0.1f, b, n, k);
 
-    dgemmf32(a, b, c, m, k, n, A, B, L2, L3);
+    dgemmf32(a, b, c, m, k, n, L2, L3);
+    mtdgemmf32(a, b, d, m, k, n, L2, L3, 8);
+
+    return eqmf32(c, d, m, n) == 0;
+}
+
+int
+test_pkdgemmf32_256x256(void) {
+    size_t m, k, n;
+    m = n = k = 64;
+
+    float *a = allocmf32(m, k);
+    float *b = allocmf32(k, n);
+    float *c = allocmf32(m, n);
+    float *d = allocmf32(m, n);
+
+    iotamf32(0.f, 0.1f, a, k, m);
+    iotamf32(3.f, 0.1f, b, n, k);
+
+    pkdgemmf32(a, b, c, m, k, n, A, B, L2, L3);
     mtdgemmf32(a, b, d, m, k, n, L2, L3, 8);
 
     return eqmf32(c, d, m, n) == 0;
@@ -584,6 +603,7 @@ main() {
         TEST(test_Tmf32_24x16),
         TEST(test_Tmf64_24x16),
         TEST(test_mtdgemmf32_256x256),
+        TEST(test_pkdgemmf32_256x256),
         TEST(test_dgerf32_16x16),
         TEST(test_dgemv_8x16),
         TEST(test_axpyf32_16),

@@ -23,6 +23,21 @@ struct benchpar {
 };
 
 void
+bench_pkdgemmf32_256x256(void *p) {
+    struct benchpar *in = p;
+    float *a = in->a, *b = in->b, *c = in->c;
+    size_t m = in->m, k = in->k, n = in->n, l2 = in->l2, l3 = in->l3;
+    size_t times = in->times;
+
+    iotamf32(0.f, 0.1f, a, m, k);
+    iotamf32(3.f, 0.1f, b, k, n);
+
+    for (size_t i = 0; i < times; i++) {
+        pkdgemmf32(a, b, c, m, k, n, A, B, l2, l3);
+    }
+}
+
+void
 bench_dgemmf32_256x256(void *p) {
     struct benchpar *in = p;
     float *a = in->a, *b = in->b, *c = in->c;
@@ -33,9 +48,10 @@ bench_dgemmf32_256x256(void *p) {
     iotamf32(3.f, 0.1f, b, k, n);
 
     for (size_t i = 0; i < times; i++) {
-        dgemmf32(a, b, c, m, k, n, A, B, l2, l3);
+        dgemmf32(a, b, c, m, k, n, l2, l3);
     }
 }
+
 
 void
 bench_mtdgemmf32_256x256(void *p) {
@@ -100,6 +116,9 @@ main() {
         }),
         BENCH(bench_mtdgemmf32_256x256, &(struct benchpar){
             1<<12, a, b, c, m, k, n, L2, L3
+        }),
+        BENCH(bench_pkdgemmf32_256x256,   &(struct benchpar){
+            1<<11, a, b, c, m, k, n, L2, L3
         }),
         BENCH(bench_Tmf32_256x256,      &(struct benchpar){
             1<<15, a, b, c, m, k, n, L2, L3
