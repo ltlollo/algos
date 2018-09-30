@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 // For more information, see LICENSE
 
+#include <assert.h>
 #include <errno.h>
 #include <immintrin.h>
 #include <pthread.h>
@@ -52,6 +53,28 @@
 #   define stream   _mm256_stream_pd
 #   define FS       f64
 #   define F64T
+#endif
+
+#ifndef SELF
+int
+ckpksize(size_t m, size_t k, size_t n, size_t *l2, size_t *l3) {
+    int res = 0;
+    size_t L2 = *l2, L3 = *l3;
+
+    size_t kc = align_down(min(L3 / n, k), LINE);
+    if (kc == 0) {
+        kc = align_up(min(L3 / n + 1, k), LINE);
+        *l3 = kc * n;
+        res = -1;
+    }
+    size_t mc = align_down(min(L2 / kc, m), LINE);
+    if (mc == 0) {
+        mc = align_up(min(L2 / kc + 1, m), LINE);
+        *l2 = mc * m;
+        res = -1;
+    }
+    return res;
+}
 #endif
 
 Num *
@@ -178,10 +201,11 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
     k = align_up(k, pad(Num));
     n = align_up(n, pad(Num));
 
-    size_t _kc = align_up(min(L3 / n + 1, k), LINE);
+    size_t _kc = align_down(min(L3 / n, k), LINE);
     size_t xa, ya, xb, yb, xc, yc, kc, mc;
     Vec ra, rb, rc[LINE];
     Num *lc = c + m * n - LINE;
+    assert(_kc);
 
     for (size_t ki = 0; ki < k; ki += _kc) {
         kc = ki + _kc > k ? k - ki : _kc;
@@ -195,7 +219,8 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
                 prefetch(c + kc * j + i, lc, _MM_HINT_T2);
             }
         }
-        size_t _mc = align_up(min(L2 / kc + 1, m), LINE);
+        size_t _mc = align_down(min(L2 / kc, m), LINE);
+        assert(_mc);
         for (size_t mi = 0; mi < m; mi += _mc) {
             mc = mi + _mc > m ? align_up(m - mi, LINE) : _mc;
             ya = yc = mi;
@@ -314,7 +339,7 @@ FN(mtdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
         };
         pthread_create( wth + i, NULL, FN(wthdgemm, FS), wthp + i);
     }
-    for (size_t i= 0; i < nt; i++) {
+    for (size_t i = 0; i < nt; i++) {
         pthread_join( wth[i], NULL);
     }
 }

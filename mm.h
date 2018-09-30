@@ -7,6 +7,8 @@
 
 #define NT_MAX (64)
 
+int ckpksize(size_t m, size_t k, size_t n, size_t *L2, size_t *L3);
+
 void axpyf32(float *a, float b, float *c, size_t m);
 float dotf32(float *a, float *b, size_t m);
 void dgerf32(float *a, float *b, float *restrict c, size_t m, size_t n);
