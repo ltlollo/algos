@@ -5,10 +5,7 @@
 #define MM_H
 #include <stdint.h>
 
-#define NT_MAX (64)
-
-int ckpksize(size_t m, size_t k, size_t n, size_t *L2, size_t *L3);
-
+int ckpkszf32(size_t m, size_t k, size_t n, size_t *L2, size_t *L3);
 void axpyf32(float *a, float b, float *c, size_t m);
 float dotf32(float *a, float *b, size_t m);
 void dgerf32(float *a, float *b, float *restrict c, size_t m, size_t n);
@@ -39,6 +36,7 @@ void printvf32(float *m, size_t my);
 void printoffvTf32(float *m, size_t mx, size_t ox, size_t dx);
 void printvTf32(float *m, size_t mx);
 
+int ckpkszf64(size_t m, size_t k, size_t n, size_t *L2, size_t *L3);
 void axpyf64(double *a, double b, double *c, size_t m);
 double dotf64(double *a, double *b, size_t m);
 void dgerf64(double *a, double *b, double *restrict c, size_t m, size_t n);

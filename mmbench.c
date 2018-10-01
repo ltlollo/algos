@@ -11,7 +11,7 @@
 
 #define BENCH(x, ...) {x, ""#x, (__VA_ARGS__) }
 #define L3 (2048 * 1024 / sizeof (float))
-#define L2 ( 256 * 1024 / sizeof (float))
+#define L2 ( 512 * 1024 / sizeof (float))
 
 static _Alignas(32) float A[L2];
 static _Alignas(32) float B[L3];
@@ -23,7 +23,7 @@ struct benchpar {
 };
 
 void
-bench_pkdgemmf32_256x256(void *p) {
+pkdgemmf32_512x512(void *p) {
     struct benchpar *in = p;
     float *a = in->a, *b = in->b, *c = in->c;
     size_t m = in->m, k = in->k, n = in->n, l2 = in->l2, l3 = in->l3;
@@ -38,7 +38,7 @@ bench_pkdgemmf32_256x256(void *p) {
 }
 
 void
-bench_dgemmf32_256x256(void *p) {
+dgemmf32_512x512(void *p) {
     struct benchpar *in = p;
     float *a = in->a, *b = in->b, *c = in->c;
     size_t m = in->m, k = in->k, n = in->n, l2 = in->l2, l3 = in->l3;
@@ -54,7 +54,7 @@ bench_dgemmf32_256x256(void *p) {
 
 
 void
-bench_mtdgemmf32_256x256(void *p) {
+mtdgemmf32_512x512(void *p) {
     struct benchpar *in = p;
     float *a = in->a, *b = in->b, *c = in->c;
     size_t m = in->m, k = in->k, n = in->n, l2 = in->l2, l3 = in->l3;
@@ -69,7 +69,7 @@ bench_mtdgemmf32_256x256(void *p) {
 }
 
 void
-bench_Tmf32_256x256(void *p) {
+Tmf32_512x512(void *p) {
     struct benchpar *in = p;
     float *a = in->a, *b = in->b;
     size_t m = in->m, n = in->n;
@@ -83,7 +83,7 @@ bench_Tmf32_256x256(void *p) {
 }
 
 void
-bench_dgemv_256x256(void *p) {
+dgemv_512x512(void *p) {
     struct benchpar *in = p;
     float *a = in->a, *b = in->b, *c = in->c;
     size_t m = in->m, n = in->n;
@@ -99,45 +99,45 @@ bench_dgemv_256x256(void *p) {
 
 int
 main() {
-    float *a = allocmf32(400, 400);
-    float *b = allocmf32(400, 400);
-    float *c = allocmf32(400, 400);
+    float *a = allocmf32(512, 512);
+    float *b = allocmf32(512, 512);
+    float *c = allocmf32(512, 512);
     size_t m, k, n;
 
-    m = k = n = 400;
+    m = k = n = 512;
 
     struct Bnc {
         void (*fn)(void *);
         const char *wh;
         void *p;
     } benchs[] = {
-        BENCH(bench_dgemmf32_256x256,   &(struct benchpar){
-            1<<11, a, b, c, m, k, n, L2, L3
+        BENCH(dgemmf32_512x512, &(struct benchpar) {
+            1<<7, a, b, c, m, k, n, L2, L3
         }),
-        BENCH(bench_mtdgemmf32_256x256, &(struct benchpar){
-            1<<12, a, b, c, m, k, n, L2, L3
+        BENCH(mtdgemmf32_512x512, &(struct benchpar) {
+            1<<10, a, b, c, m, k, n, L2, L3
         }),
-        BENCH(bench_pkdgemmf32_256x256,   &(struct benchpar){
-            1<<11, a, b, c, m, k, n, L2, L3
+        BENCH(pkdgemmf32_512x512, &(struct benchpar) {
+            1<<7, a, b, c, m, k, n, L2, L3
         }),
-        BENCH(bench_Tmf32_256x256,      &(struct benchpar){
-            1<<15, a, b, c, m, k, n, L2, L3
+        BENCH(Tmf32_512x512, &(struct benchpar) {
+            1<<13, a, b, c, m, k, n, L2, L3
         }),
-        BENCH(bench_dgemv_256x256,      &(struct benchpar){
+        BENCH(dgemv_512x512, &(struct benchpar) {
             1<<14, a, b, c, m, k, n, L2, L3
         }),
         BENCH(NULL, NULL),
     };
 
-    struct timespec beg, end;
+    float ts;
+    struct timespec b, e;
+    static char *fmt = "[%s]: time: %f ms, n: %ld iter, rate: %f ms/iter\n";
     for (struct Bnc *bench = benchs; bench->fn; bench++) {
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &beg);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &b);
         bench->fn(bench->p);
         struct benchpar *p = bench->p;
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &end);
-        float ts = ((end.tv_sec * 1000000000 + end.tv_nsec) -
-            (beg.tv_sec * 1000000000 + beg.tv_nsec)) * 1e-6;
-        printf("[%s]: time: %f ms, n: %ld iter, rate: %f ms/iter\n", bench->wh,
-            ts, p->times, ts / p->times);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &e);
+        ts = (e.tv_sec - b.tv_sec) * 1e3 + (e.tv_nsec - b.tv_nsec) * 1e-6;
+        printf(fmt, bench->wh, ts, p->times, ts / p->times);
     }
 }

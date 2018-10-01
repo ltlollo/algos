@@ -10,6 +10,7 @@
 
 #if !defined (SELF)
 #   include "mm.h"
+#   define NT_MAX (64)
 #   define FN_(a, b)        a##b
 #   define FN(a, b)         FN_(a, b)
 #   define stream_load(a)   (Vec) _mm256_stream_load_si256((void *)(a))
@@ -28,7 +29,6 @@
 #   define align_down(n, p) (_u(n) & ~((p) - 1))
 #   define align_up(n, p)   ((_u(n) + ((p) - 1)) & ~((p) - 1))
 #   define pad(x)           (256 / 8 / sizeof (x))
-#   define NT               (8)
 #endif
 
 #if !defined (F32T)
@@ -55,9 +55,12 @@
 #   define F64T
 #endif
 
-#ifndef SELF
 int
-ckpksize(size_t m, size_t k, size_t n, size_t *l2, size_t *l3) {
+FN(ckpksz, FS)(size_t m, size_t k, size_t n, size_t *l2, size_t *l3) {
+    m = align_up(m, pad(Num));
+    n = align_up(n, pad(Num));
+    k = align_up(k, pad(Num));
+
     int res = 0;
     size_t L2 = *l2, L3 = *l3;
 
@@ -75,7 +78,6 @@ ckpksize(size_t m, size_t k, size_t n, size_t *l2, size_t *l3) {
     }
     return res;
 }
-#endif
 
 Num *
 FN(allocm, FS)(size_t m, size_t n) {
@@ -258,7 +260,7 @@ FN(pkdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
 
 struct FN(wthpar, FS) {
     Num *a, *b, *c;
-    size_t m, k, n, _kc, nt, i, L2, L3;
+    size_t m, k, n, nt, i, L2, L3;
 };
 
 void *
@@ -266,8 +268,9 @@ FN(wthdgemm, FS)(void *p) {
     struct FN(wthpar, FS) *in = p;
 
     Num *a = in->a, *b = in->b, *c = in->c;
-    size_t m = in->m, k = in->k, n = in->n, _kc = in->_kc, nt = in->nt,
-           i = in->i, L2 = in->L2;
+    size_t m = in->m, k = in->k, n = in->n, nt = in->nt, i = in->i,
+           L2 = in->L2, L3 = in->L3;
+    size_t _kc = align_up(min(L3 / n + 1, k), LINE);
     size_t xa, ya, xb, yb, xc, yc, kc, mc;
 
     Vec ra, rb, rc[LINE];
@@ -328,9 +331,8 @@ FN(dgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
     k = align_up(k, pad(Num));
     n = align_up(n, pad(Num));
 
-    size_t _kc = align_up(min(L3 / n + 1, k), LINE);
     struct FN(wthpar, FS) wthp = {
-        a, b, c, m, k, n, _kc, 1, 0, L2, L3,
+        a, b, c, m, k, n, 1, 0, L2, L3,
     };
     FN(wthdgemm, FS)(&wthp);
 }
@@ -343,13 +345,12 @@ FN(mtdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
     n = align_up(n, pad(Num));
     nt = min(nt, NT_MAX);
 
-    size_t _kc = align_up(min(L3 / n + 1, k), LINE);
     struct FN(wthpar, FS) wthp[NT_MAX];
     pthread_t wth[NT_MAX];
 
     for (size_t i = 0; i < nt; i++) {
         wthp[i] = (struct FN(wthpar, FS)) {
-            a, b, c, m, k, n, _kc, nt, i, L2, L3,
+            a, b, c, m, k, n, nt, i, L2, L3,
         };
         pthread_create( wth + i, NULL, FN(wthdgemm, FS), wthp + i);
     }

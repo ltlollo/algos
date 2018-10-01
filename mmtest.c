@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 // For more information, see LICENSE
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -16,7 +17,7 @@ static _Alignas(32) float A[L2];
 static _Alignas(32) float B[L3];
 
 int
-test_dgemmf32_8x16x8(void) {
+dgemmf32_8x16x8(void) {
     size_t m, k, n;
     m = n = 8;
     k = 16;
@@ -28,6 +29,8 @@ test_dgemmf32_8x16x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -45,7 +48,7 @@ test_dgemmf32_8x16x8(void) {
 }
 
 int
-test_dgemmf32_16x8x8(void) {
+dgemmf32_16x8x8(void) {
     size_t m, k, n;
     m = 16;
     n = k = 8;
@@ -57,6 +60,8 @@ test_dgemmf32_16x8x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -82,7 +87,7 @@ test_dgemmf32_16x8x8(void) {
 }
 
 int
-test_dgemmf32_8x8x16(void) {
+dgemmf32_8x8x16(void) {
     size_t m, k, n;
     n = 16;
     m = k = 8;
@@ -94,6 +99,8 @@ test_dgemmf32_8x8x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -111,7 +118,7 @@ test_dgemmf32_8x8x16(void) {
 }
 
 int
-test_dgemmf32_8x8x8(void) {
+dgemmf32_8x8x8(void) {
     size_t m, k, n;
     m = n = k = 8;
 
@@ -123,6 +130,8 @@ test_dgemmf32_8x8x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -140,7 +149,7 @@ test_dgemmf32_8x8x8(void) {
 }
 
 int
-test_dgemmf32_16x8x16(void) {
+dgemmf32_16x8x16(void) {
     size_t m, k, n;
     m = n = 16;
     k = 8;
@@ -152,6 +161,8 @@ test_dgemmf32_16x8x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -177,7 +188,7 @@ test_dgemmf32_16x8x16(void) {
 }
 
 int
-test_dgemmf32_16x16x8(void) {
+dgemmf32_16x16x8(void) {
     size_t m, k, n;
     m = k = 16;
     n = 8;
@@ -189,6 +200,8 @@ test_dgemmf32_16x16x8(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -214,7 +227,47 @@ test_dgemmf32_16x16x8(void) {
 }
 
 int
-test_dgemmf32_8x16x16(void) {
+dgemmf64_16x16x8(void) {
+    size_t m, k, n;
+    m = k = 16;
+    n = 8;
+
+    double *a = allocmf64(m, k);
+    double *b = allocmf64(k, n);
+    double *c = allocmf64(m, n);
+
+    iotamf64(0.f, 1.f, a, m, k);
+    iotamf64(3.f, 1.f, b, k, n);
+
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf64(m, k, n, &l2, &l3) == 0);
+    dgemmf64(a, b, c, m, k, n, L2, L3);
+
+    static double et[] = {
+        25600,  56320,  87040,  117760, 148480, 179200, 209920, 240640,
+        25768,  56744,  87720,  118696, 149672, 180648, 211624, 242600,
+        25936,  57168,  88400,  119632, 150864, 182096, 213328, 244560,
+        26104,  57592,  89080,  120568, 152056, 183544, 215032, 246520,
+        26272,  58016,  89760,  121504, 153248, 184992, 216736, 248480,
+        26440,  58440,  90440,  122440, 154440, 186440, 218440, 250440,
+        26608,  58864,  91120,  123376, 155632, 187888, 220144, 252400,
+        26776,  59288,  91800,  124312, 156824, 189336, 221848, 254360,
+        26944,  59712,  92480,  125248, 158016, 190784, 223552, 256320,
+        27112,  60136,  93160,  126184, 159208, 192232, 225256, 258280,
+        27280,  60560,  93840,  127120, 160400, 193680, 226960, 260240,
+        27448,  60984,  94520,  128056, 161592, 195128, 228664, 262200,
+        27616,  61408,  95200,  128992, 162784, 196576, 230368, 264160,
+        27784,  61832,  95880,  129928, 163976, 198024, 232072, 266120,
+        27952,  62256,  96560,  130864, 165168, 199472, 233776, 268080,
+        28120,  62680,  97240,  131800, 166360, 200920, 235480, 270040
+    }, e[sizeof (et) / sizeof (double)];
+    chordmf64(e, et, m, n);
+    return eqmf64(c, e, m, n) == 0;
+}
+
+
+int
+dgemmf32_8x16x16(void) {
     size_t m, k, n;
     m = 8;
     k = n = 16;
@@ -226,6 +279,8 @@ test_dgemmf32_8x16x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -243,7 +298,7 @@ test_dgemmf32_8x16x16(void) {
 }
 
 int
-test_dgemmf32_16x16x16(void) {
+dgemmf32_16x16x16(void) {
     size_t m, k, n;
     m = k = n = 16;
 
@@ -254,6 +309,8 @@ test_dgemmf32_16x16x16(void) {
     iotamf32(0.f, 1.f, a, m, k);
     iotamf32(3.f, 1.f, b, k, n);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -279,7 +336,7 @@ test_dgemmf32_16x16x16(void) {
 }
 
 int
-test_dgemmf32_3x3x3(void) {
+dgemmf32_3x3x3(void) {
     size_t m, k, n;
     m = n = k = 3;
 
@@ -290,6 +347,8 @@ test_dgemmf32_3x3x3(void) {
     iotaoffmf32(0.f, 1.f, a, m, k, 0, 0, 3, 3);
     iotaoffmf32(3.f, 1.f, b, k, n, 0, 0, 3, 3);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
 
     static float et[] = {
@@ -307,7 +366,7 @@ test_dgemmf32_3x3x3(void) {
 }
 
 int
-test_Tmf32_16x24(void) {
+Tmf32_16x24(void) {
     size_t m = 16;
     size_t n = 24;
 
@@ -342,7 +401,7 @@ test_Tmf32_16x24(void) {
 }
 
 int
-test_Tmf32_24x16(void) {
+Tmf32_24x16(void) {
     size_t m = 24;
     size_t n = 16;
 
@@ -385,7 +444,7 @@ test_Tmf32_24x16(void) {
 }
 
 int
-test_Tmf64_24x16(void) {
+Tmf64_24x16(void) {
     size_t m = 24;
     size_t n = 16;
 
@@ -428,7 +487,7 @@ test_Tmf64_24x16(void) {
 }
 
 int
-test_mtdgemmf32_256x256(void) {
+mtdgemmf32_256x256(void) {
     size_t m, k, n;
     m = n = k = 256;
 
@@ -440,6 +499,8 @@ test_mtdgemmf32_256x256(void) {
     iotamf32(0.f, 0.1f, a, k, m);
     iotamf32(3.f, 0.1f, b, n, k);
 
+    size_t l2 = L2, l3 = L3;
+    assert(ckpkszf32(m, k, n, &l2, &l3) == 0);
     dgemmf32(a, b, c, m, k, n, L2, L3);
     mtdgemmf32(a, b, d, m, k, n, L2, L3, 8);
 
@@ -447,7 +508,7 @@ test_mtdgemmf32_256x256(void) {
 }
 
 int
-test_pkdgemmf32_256x256(void) {
+pkdgemmf32_256x256(void) {
     size_t m, k, n;
     m = n = k = 64;
 
@@ -466,7 +527,7 @@ test_pkdgemmf32_256x256(void) {
 }
 
 int
-test_dgerf32_16x16(void) {
+dgerf32_16x16(void) {
     size_t m, n;
     m = n = 16;
 
@@ -503,7 +564,7 @@ test_dgerf32_16x16(void) {
 }
 
 int
-test_dgemv_8x16(void) {
+dgemvf32_8x16(void) {
     size_t m, n;
     m = 8;
     n = 16;
@@ -532,7 +593,7 @@ test_dgemv_8x16(void) {
 }
 
 int
-test_axpyf32_16(void) {
+axpyf32_16(void) {
     size_t m;
     m = 16;
 
@@ -567,7 +628,7 @@ test_axpyf32_16(void) {
 }
 
 int
-test_dotf32_16(void) {
+dotf32_16(void) {
     size_t m;
     m = 16;
 
@@ -590,24 +651,16 @@ main() {
         int (*fn)(void);
         const char *wh;
     } tests[] = {
-        TEST(test_dgemmf32_16x8x8),
-        TEST(test_dgemmf32_8x16x8),
-        TEST(test_dgemmf32_8x8x16),
-        TEST(test_dgemmf32_16x16x8),
-        TEST(test_dgemmf32_16x8x16),
-        TEST(test_dgemmf32_8x16x16),
-        TEST(test_dgemmf32_16x16x16),
-        TEST(test_dgemmf32_8x8x8),
-        TEST(test_dgemmf32_3x3x3),
-        TEST(test_Tmf32_16x24),
-        TEST(test_Tmf32_24x16),
-        TEST(test_Tmf64_24x16),
-        TEST(test_mtdgemmf32_256x256),
-        TEST(test_pkdgemmf32_256x256),
-        TEST(test_dgerf32_16x16),
-        TEST(test_dgemv_8x16),
-        TEST(test_axpyf32_16),
-        TEST(test_dotf32_16),
+        TEST(dgemmf32_16x8x8),     TEST(dgemmf32_8x16x8),
+        TEST(dgemmf32_8x8x16),     TEST(dgemmf32_16x16x8),
+        TEST(dgemmf32_16x8x16),    TEST(dgemmf32_8x16x16),
+        TEST(dgemmf32_16x16x16),   TEST(dgemmf32_8x8x8),
+        TEST(dgemmf32_3x3x3),      TEST(Tmf32_16x24),
+        TEST(Tmf32_24x16),         TEST(Tmf64_24x16),
+        TEST(mtdgemmf32_256x256),  TEST(pkdgemmf32_256x256),
+        TEST(dgerf32_16x16),       TEST(dgemvf32_8x16),
+        TEST(axpyf32_16),          TEST(dotf32_16),
+        TEST(dgemmf64_16x16x8),
         TEST(NULL),
     };
     for (struct Tst *test = tests; test->fn; test++) {
