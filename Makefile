@@ -22,5 +22,11 @@ mmdbg:
 mmrel:
 	$(CC) ${REL_CFLAGS} -c mm.c
 
+cryprel:
+	$(CC) ${REL_CFLAGS} -c cryp.c
+
+crypdbg:
+	$(CC) ${DBG_CFLAGS} -c cryp.c
+
 clean:
 	rm -f *.o mmtests
