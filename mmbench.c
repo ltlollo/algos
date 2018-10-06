@@ -130,14 +130,14 @@ main() {
     };
 
     float ts;
-    struct timespec b, e;
+    struct timespec s, e;
     static char *fmt = "[%s]: time: %f ms, n: %ld iter, rate: %f ms/iter\n";
     for (struct Bnc *bench = benchs; bench->fn; bench++) {
-        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &b);
+        clock_gettime(CLOCK_THREAD_CPUTIME_ID, &s);
         bench->fn(bench->p);
         struct benchpar *p = bench->p;
         clock_gettime(CLOCK_THREAD_CPUTIME_ID, &e);
-        ts = (e.tv_sec - b.tv_sec) * 1e3 + (e.tv_nsec - b.tv_nsec) * 1e-6;
+        ts = (e.tv_sec - s.tv_sec) * 1e3 + (e.tv_nsec - s.tv_nsec) * 1e-6;
         printf(fmt, bench->wh, ts, p->times, ts / p->times);
     }
 }
