@@ -1,3 +1,4 @@
 *.o
-*test*
-*bench*
+*tst*
+*bch*
+*.swp
