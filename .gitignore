@@ -1,4 +1,4 @@
 *.o
-*tst*
-*bch*
+*tst
+*bch
 *.swp
