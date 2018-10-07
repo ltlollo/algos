@@ -1,5 +1,5 @@
 // This is free and unencumbered software released into the public domain.
-// For more information, see LICENS
+// For more information, see LICENSE
 
 #include <immintrin.h>
 
