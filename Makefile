@@ -5,7 +5,7 @@ REL_CFLAGS = ${CFLAGS}  -s -Ofast -funroll-all-loops -minline-all-stringops \
 DBG_CFLAGS = ${CFLAGS} -O0 -g
 
 test: 	mmtst cryptst
-bench: 	mmbch
+bench: 	mmbch crypbch
 .PHONY: clean test bench
 
 %tst: %dbg 	; $(CC) ${LDFLAGS} ${DBG_CFLAGS} $*.o $@.c -o $@; ./$@
