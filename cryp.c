@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.      
 // For more information, see LICENSE
 
-#include "cryp.h"
+#include <immintrin.h>
 
 __m256i
 muli128(__m128i x, __m128i h) {

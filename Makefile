@@ -4,7 +4,7 @@ REL_CFLAGS = ${CFLAGS}  -s -Ofast -funroll-all-loops -minline-all-stringops \
 	-ffunction-sections -fdata-sections -DNDEBUG
 DBG_CFLAGS = ${CFLAGS} -O0 -g
 
-test: 	mmtst cryptst
+test: 	mmtst cryptst htst
 bench: 	mmbch crypbch
 .PHONY: clean test bench
 

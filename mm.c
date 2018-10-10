@@ -7,9 +7,9 @@
 #include <pthread.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #if !defined (SELF)
-#   include "mm.h"
 #   define NT_MAX (64)
 #   define FN_(a, b)        a##b
 #   define FN(a, b)         FN_(a, b)
