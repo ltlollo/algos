@@ -3,4 +3,6 @@
 
 #include <immintrin.h>
 
+__m256i mul_128i(__m128i x, __m128i h);
+__m128i p256mod0x87(__m256i m1);
 __m128i mul_gf2e128mod0x87(__m128i x, __m128i h);

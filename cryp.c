@@ -3,10 +3,11 @@
 
 #include "cryp.h"
 
-__m128i
-mul_gf2e128mod0x87(__m128i x, __m128i h) {
+__m256i
+mul_128i(__m128i x, __m128i h) {
     __m128i sx =_mm_shuffle_epi32(x, 0x4e), sh =_mm_shuffle_epi32(h, 0x4e);
     // x := [a|b|c|d], sx := [c|d|a|b], h := [e|f|g|h], sh = [g|h|e|f]
+    __m256i z = _mm256_setzero_si256();
 
     __m256i a = _mm256_set_m128i(sx, x), b = _mm256_set_m128i(sh, h);
     // a := [a|b|c|d|c|d|a|b], b := [e|f|g|h|g|h|e|f]
@@ -24,7 +25,7 @@ mul_gf2e128mod0x87(__m128i x, __m128i h) {
     __m256i xa = _mm256_xor_si256(ssa, a), xb = _mm256_xor_si256(ssb, b);
     // xa := [a+b|-|c+a|d+b|c+d|-|a+c|b+d], xb := [e+f|-|g+f|h+f|g+h|-|f+g|g+h]
 
-    __m256i m2 = _mm256_mul_epu32(xa, xb);
+    __m256i m2 = _mm256_mul_epu32(xa, xb), m4 = m2;
     // m2 := [(a+b)(e+f)|(c+a)(g+e)|(c+d)(g+h)|(c+a)(g+e)]
 
     __m256i xm2 = _mm256_xor_si256(m2, m1);
@@ -37,6 +38,11 @@ mul_gf2e128mod0x87(__m128i x, __m128i h) {
     xm2 = _mm256_bslli_epi128(xm2, 8); // xm2 := [-  |be+fa|-  |dg+ch]
     xm2 = _mm256_bsrli_epi128(xm2, 4); // xm2 := [-|be+fa|-|-|dg+ch|-]
     m1 = _mm256_xor_si256(m1, xm2);    // m1  := [ab*ef    |cd*gh    ]
+
+    sm1 = _mm256_permute4x64_epi64(m1, 0xd8);
+    // sm1  := [ab*ef:lo|cd*gh:lo|ab*ef:hi|cd*gh:hi]
+    __m256i ssm1 = _mm256_shuffle_epi32(m1, 0x4e);
+    // ssm1 := [ab*ef:hi|ab*ef:lo|cd*gh:hi|cd*gh:lo]
 
     __m256i sxa = _mm256_shuffle_epi32(xa, 0xe5),
             sxb = _mm256_shuffle_epi32(xb, 0xe5);
@@ -52,8 +58,9 @@ mul_gf2e128mod0x87(__m128i x, __m128i h) {
 
     __m256i m3 = _mm256_mul_epu32(ssa, ssb);
     // m3 := [(d+b)(h+f)|(a+b+c+d)(e+f+g+h)|(d+b)(h+f)|(a+b+c+d)(e+f+g+h)]
-    
-    __m256i z = _mm256_setzero_si256();
+
+    m4 = _mm256_xor_si256(m4, _mm256_bslli_epi128(m3, 8));
+    m4 = _mm256_xor_si256(m4, m3);
 
     m2 = _mm256_blend_epi32(z, m2, 0xc);  // m2 := [-  |(c+a)(g+e)|-  |-  ]
     m1 = _mm256_xor_si256(m1, m2);
@@ -61,18 +68,31 @@ mul_gf2e128mod0x87(__m128i x, __m128i h) {
     m2 = _mm256_blend_epi32(z, m3, 0x30); // m2 := [-  |-  |(d+b)(h+f)|-  ]
     m1 = _mm256_xor_si256(m1, m2);
 
-    m2 = _mm256_blend_epi32(z, m3, 0xc);
-    // m2 := [-  |(a+b+c+d)(e+f+g+h)|-  |-  ]
-    m2 = _mm256_bslli_epi128(m2, 2);
-    // m2 := [-|-|-|(a+b+c+d)(e+f+g+h):lo|-|-|-|-]
+    m2 = _mm256_blend_epi32(z, m4, 0xc);
+    // m2 := [-  |(a+b+c+d)(e+f+g+h)+..|-  |-  ]
+    m2 = _mm256_bslli_epi128(m2, 4);
+    // m2 := [-|-|-|(a+b+c+d)(e+f+g+h)+..:lo|-|-|-|-]
     m1 = _mm256_xor_si256(m1, m2);
 
-    m2 = _mm256_blend_epi32(z, m3, 0xc0);
-    // m2 := [-  |-  |-  |(a+b+c+d)(e+f+g+h)]
-    m2 = _mm256_bsrli_epi128(m2, 14);
-    // m2 := [-|-|-|-|(a+b+c+d)(e+f+g+h):hi|-|-|-]
+    m2 = _mm256_blend_epi32(z, m4, 0xc0);
+    // m2 := [-  |-  |-  |(a+b+c+d)(e+f+g+h)+..]
+    m2 = _mm256_bsrli_epi128(m2, 12);
+    // m2 := [-|-|-|-|(a+b+c+d)(e+f+g+h)+..:hi|-|-|-]
     m1 = _mm256_xor_si256(m1, m2);
 
+    m2 = _mm256_blend_epi32(z, sm1, 0x3c);
+    // m2 := [-  |cd*gh:lo|ab*ef:hi|-  ]
+    m3 = _mm256_blend_epi32(z, ssm1, 0x3c);
+    // m3 := [-  |ab*ef:lo|cd*gh:hi|-  ]
+
+    m1 = _mm256_xor_si256(m1, m2);
+    m1 = _mm256_xor_si256(m1, m3);
+
+    return m1;
+}
+
+__m128i
+p256mod0x87(__m256i m1) {
     __m128i hi = _mm256_extracti128_si256(m1, 1),
             lo = _mm256_extracti128_si256(m1, 0);
     // reduction mod P(2, 0x87)
@@ -115,6 +135,13 @@ mul_gf2e128mod0x87(__m128i x, __m128i h) {
     lo = _mm_xor_si128(lo, rab0);
     lo = _mm_xor_si128(lo, rab2);
 
+    return lo;
+}
+
+__m128i
+mul_gf2e128mod0x87(__m128i x, __m128i h) {
+    __m256i m1 = mul_128i(x, h);
+    __m128i lo = p256mod0x87(m1);
     return lo;
 }
 
