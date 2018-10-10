@@ -4,7 +4,7 @@
 #include "cryp.h"
 
 __m256i
-mul_128i(__m128i x, __m128i h) {
+muli128(__m128i x, __m128i h) {
     __m128i sx =_mm_shuffle_epi32(x, 0x4e), sh =_mm_shuffle_epi32(h, 0x4e);
     // x := [a|b|c|d], sx := [c|d|a|b], h := [e|f|g|h], sh = [g|h|e|f]
     __m256i z = _mm256_setzero_si256();
@@ -139,8 +139,8 @@ p256mod0x87(__m256i m1) {
 }
 
 __m128i
-mul_gf2e128mod0x87(__m128i x, __m128i h) {
-    __m256i m1 = mul_128i(x, h);
+mulgf2e128mod0x87(__m128i x, __m128i h) {
+    __m256i m1 = muli128(x, h);
     __m128i lo = p256mod0x87(m1);
     return lo;
 }
