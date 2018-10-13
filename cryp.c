@@ -138,6 +138,19 @@ p256mod0x87(__m256i m1) {
     return lo;
 }
 
+static inline __m128i
+p128sli(__m128i a, int imm) {
+    __m128i ss = _mm_slli_epi64(a, imm);
+    __m128i sr =  _mm_srli_epi64(_mm_slli_si128(a, 8), 64 - imm);
+    return _mm_xor_si128(ss, sr);
+}
+static inline __m128i
+p128sri(__m128i a, int imm) {
+    __m128i ss = _mm_srli_epi64(a, imm);
+    __m128i sr =  _mm_slli_epi64(_mm_srli_si128(a, 8), 64 - imm);
+    return _mm_xor_si128(ss, sr);
+}
+
 __m128i
 mulgf2e128mod0x87bitrev(__m128i x, __m128i h) {
     __m128i H, L, Mx, Mh, M ,hi, lo, mask, fst, lst, cmp,
@@ -148,11 +161,10 @@ mulgf2e128mod0x87bitrev(__m128i x, __m128i h) {
     Mx = _mm_xor_si128(x, _mm_bsrli_si128(x, 8));
     Mh = _mm_xor_si128(h, _mm_bsrli_si128(h, 8));
     M = _mm_clmulepi64_si128(Mx, Mh, 0x00);
-    hi = H, lo = L;
-    hi = _mm_xor_si128(hi, _mm_bsrli_si128(H, 8));
+    hi = _mm_xor_si128(H, _mm_bsrli_si128(H, 8));
     hi = _mm_xor_si128(hi, _mm_bsrli_si128(M, 8));
     hi = _mm_xor_si128(hi, _mm_bsrli_si128(L, 8));
-    lo = _mm_xor_si128(lo, _mm_bslli_si128(H, 8));
+    lo = _mm_xor_si128(L, _mm_bslli_si128(H, 8));
     lo = _mm_xor_si128(lo, _mm_bslli_si128(M, 8));
     lo = _mm_xor_si128(lo, _mm_bslli_si128(L, 8));
 
@@ -169,21 +181,17 @@ mulgf2e128mod0x87bitrev(__m128i x, __m128i h) {
     rdl = _mm_cmpeq_epi32(rdl, cmp);
     rdl = _mm_and_si128(rdl, _mm_set_epi64x(0xe608000000000000ull, 3ull));
 
-    hi = _mm_xor_si128(_mm_slli_epi32(hi, 1),
-        _mm_srli_epi64(_mm_slli_si128(hi, 8), 64 - 1));
+    hi = p128sli(hi, 1);
     hi = _mm_xor_si128(hi, _mm_srli_epi64(_mm_srli_si128(lo, 8), 64 - 1));
     hi = _mm_xor_si128(hi, rdl);
 
-    rb = _mm_slli_si128(fst, 15);
-    rb = _mm_srli_epi32(_mm_slli_epi32(rb, 2), 1);
+    rb =  _mm_srli_epi64(_mm_slli_epi64(_mm_slli_si128(fst, 8), 64 - 1), 1);
+    rb = _mm_xor_si128(rb, _mm_srli_epi64(_mm_slli_si128(fst, 31), 2));
 
     rab1 = _mm_xor_si128(fst, rb);
-    rab0 = _mm_xor_si128(_mm_slli_epi32(rab1, 1),
-        _mm_srli_epi64(_mm_slli_si128(rab1, 8), 64 - 1));
-    rab2 = _mm_xor_si128(_mm_srli_epi32(rab1, 1),
-        _mm_slli_epi64(_mm_srli_si128(rab1, 8), 64 - 1));
-    rab7 = _mm_xor_si128(_mm_srli_epi32(rab1, 6),
-        _mm_slli_epi64(_mm_srli_si128(rab1, 8), 64 - 6));
+    rab0 = p128sli(rab1, 1);
+    rab2 = p128sri(rab1, 2);
+    rab7 = p128sri(rab1, 6);
 
     rab0 = _mm_xor_si128(rab0, rab1);
     rab2 = _mm_xor_si128(rab2, rab7);
