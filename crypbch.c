@@ -17,13 +17,13 @@ struct benchpar {
 };
 
 void
-mul_gf2e128mod0x87_1_2(void *p) {
+mulgf2e128mod0x87_1_2(void *p) {
     struct benchpar *in = p;
     __m128i a = in->a, b = in->b;
     size_t times = in->times;
 
     for (size_t i = 0; i < times; i++) {
-        a = mul_gf2e128mod0x87(a, b);
+        a = mulgf2e128mod0x87bitrev(a, b);
     }
 }
 
@@ -36,7 +36,7 @@ main() {
         const char *wh;
         void *p;
     } benchs[] = {
-        BENCH(mul_gf2e128mod0x87_1_2, &(struct benchpar) { 1<<26, a, b }),
+        BENCH(mulgf2e128mod0x87_1_2, &(struct benchpar) { 1<<26, a, b }),
         BENCH(NULL, NULL),
     };
 

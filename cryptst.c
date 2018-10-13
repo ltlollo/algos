@@ -37,13 +37,24 @@ muli128_1(void) {
     return _mm256_movemask_epi8(_mm256_cmpeq_epi32(r, c)) == -1;
 }
 
+int
+muli128_11(void) {
+    __m128i a;
+    __m256i c, r;
+
+    a = _mm_set_epi32(0, 0, 1, 1);
+    c = _mm256_set_epi32(0, 0, 0, 0, 0, 1, 0, 1);
+    r  = muli128(a, a);
+
+    return _mm256_movemask_epi8(_mm256_cmpeq_epi32(r, c)) == -1;
+}
 
 int
 mulGF2e128_2357_11131719(void) {
     __m128i a = _mm_set_epi32(2,3,5,7);
     __m128i b = _mm_set_epi32(11,13,17,19);
 
-    mulgf2e128mod0x87(a, b);
+    mulgf2e128mod0x87bitrev(a, b);
 
     return 0;
 }
@@ -55,6 +66,7 @@ main() {
         const char *wh;
     } tests[] = {
         TEST(mulGF2e128_2357_11131719), TEST(muli128_0), TEST(muli128_1),
+        TEST(muli128_11),
         TEST(NULL),
     };
     for (struct Tst *test = tests; test->fn; test++) {
