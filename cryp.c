@@ -182,7 +182,7 @@ mulgf2e128mod0x87bitrev(__m128i x, __m128i h) {
     rdl = _mm_and_si128(rdl, _mm_set_epi64x(0xe608000000000000ull, 3ull));
 
     hi = p128sli(hi, 1);
-    hi = _mm_xor_si128(hi, _mm_srli_epi64(_mm_srli_si128(lo, 8), 64 - 1));
+    hi = _mm_xor_si128(hi, _mm_srli_epi64(_mm_srli_si128(lst, 8), 64 - 1));
     hi = _mm_xor_si128(hi, rdl);
 
     rb =  _mm_srli_epi64(_mm_slli_epi64(_mm_slli_si128(fst, 8), 64 - 1), 1);
