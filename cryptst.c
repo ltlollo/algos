@@ -51,8 +51,8 @@ muli128_11(void) {
 
 int
 mulGF2e128_2357_11131719(void) {
-    __m128i a = _mm_set_epi32(2,3,5,7);
-    __m128i b = _mm_set_epi32(11,13,17,19);
+    __m128i a = _mm_set_epi32(-1, -1, -1, -1);
+    __m128i b = _mm_set_epi32(-1, -1, -1, -1);
 
     mulgf2e128mod0x87bitrev(a, b);
 

@@ -8,7 +8,8 @@ test: 	mmtst cryptst htst
 bench: 	mmbch crypbch
 .PHONY: clean test bench
 
-%tst: %dbg 	; $(CC) ${LDFLAGS} ${DBG_CFLAGS} $*.o $@.c -o $@; ./$@
+%inc: %*.c	; printf "#include \"$*.c\"\nint main() {}" | $(CC) ${CFLAGS} -xc -
+%tst: %dbg %inc	; $(CC) ${LDFLAGS} ${DBG_CFLAGS} $*.o $@.c -o $@; ./$@
 %bch: %rel 	; $(CC) ${LDFLAGS} ${REL_CFLAGS} $*.o $@.c -o $@; ./$@
 %dbg: %*.c 	; $(CC) ${DBG_CFLAGS} -c $*.c
 %rel: %*.c	; $(CC) ${REL_CFLAGS} -c $*.c
