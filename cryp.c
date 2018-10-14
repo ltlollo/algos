@@ -189,7 +189,7 @@ mulgf2e128mod0x87bitrev(__m128i x, __m128i h) {
 
     rab1 = _mm_xor_si128(fst, rb);
     rab0 = p128sli(rab1, 1);
-    rab2 = p128sri(rab1, 2);
+    rab2 = p128sri(rab1, 1);
     rab7 = p128sri(rab1, 6);
 
     rab0 = _mm_xor_si128(rab0, rab1);

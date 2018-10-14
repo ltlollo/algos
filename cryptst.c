@@ -51,12 +51,13 @@ muli128_11(void) {
 
 int
 mulGF2e128_2357_11131719(void) {
-    __m128i a = _mm_set_epi32(-1, -1, -1, -1);
-    __m128i b = _mm_set_epi32(-1, -1, -1, -1);
+    __m128i a, b, c, r;
 
-    mulgf2e128mod0x87bitrev(a, b);
+    a = b = _mm_set_epi32(-1, -1, -1, -1);
+    c = _mm_set_epi32(0xf402aaaa, 0xaaaaaaaa, 0xaaaaaaaa, 0xaaaaaaaa);
+    r = mulgf2e128mod0x87bitrev(a, b);
 
-    return 0;
+    return _mm_movemask_epi8(_mm_cmpeq_epi32(r, c)) == 0xffff;
 }
 
 int
