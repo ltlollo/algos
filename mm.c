@@ -240,7 +240,7 @@ FN(pkdgemm, FS)(Num *a, Num *b, Num *restrict c, size_t m, size_t k, size_t n,
                     for (size_t j = 0; j < LINE; j++) {
                         Num *vc = c + m * (xc + j) + yc + oi;
                         rc[j] = stream_load(vc);
-                        prefetch(vc + LINE, lc, _MM_HINT_T0);
+                        prefetch(vc + LINE, lc, _MM_HINT_NTA);
                     }
                     for (size_t pi = 0; pi < kc; pi++) {
                         ra = load(A + mc * pi + oi);
@@ -305,7 +305,7 @@ FN(wthdgemm, FS)(void *p) {
                     for (size_t j = 0; j < LINE; j++) {
                         Num *vc = c + m * (xc + j) + yc + oi;
                         rc[j] = stream_load(vc);
-                        prefetch(vc + LINE, lc, _MM_HINT_T0);
+                        prefetch(vc + LINE, lc, _MM_HINT_NTA);
                     }
                     for (size_t pi = 0; pi < kc; pi++) {
                         ra = load(a + mc * (xa + pi) + oi + ya);
@@ -497,7 +497,7 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t my, size_t mx) {
                 regs[i] = _mm256_stream_load_si256(src);
             }
             for (size_t i = 0; i < LINE; i++) {
-                prefetch(m + (x + i) * my + y + LINE, lc, _MM_HINT_T0);
+                prefetch(m + (x + i) * my + y + LINE, lc, _MM_HINT_NTA);
             }
             tmp[0] = _mm256_permute2x128_si256(regs[4], regs[0], 0x3);
             tmp[1] = _mm256_permute2x128_si256(regs[5], regs[1], 0x3);
@@ -572,7 +572,7 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t my, size_t mx) {
                 regs[i] = _mm256_stream_load_si256(src);
             }
             for (size_t i = 0; i < LINE; i++) {
-                prefetch(m + (x + i) * my + y + LINE, lc, _MM_HINT_T0);
+                prefetch(m + (x + i) * my + y + LINE, lc, _MM_HINT_NTA);
             }
             tmp[0] = _mm256_permute2x128_si256(regs[2], regs[0], 0x3);
             tmp[1] = _mm256_permute2x128_si256(regs[3], regs[1], 0x3);
