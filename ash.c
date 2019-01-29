@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
@@ -92,7 +91,7 @@ store_add(struct Store **sptr, void *mm, size_t mmsz) {
     return res;
 }
 
-static ssize_t
+static int8_t
 hmap_ord(uint32_t size) {
     for (int i = 4; i < 32; i++) {
         if (size < (1u << i)) {
@@ -108,7 +107,7 @@ hmap_init(struct HashMapMem *hmm
     , uint16_t vsize
     , struct Store *store
 ) {
-    ssize_t ord = hmap_ord(size);
+    int8_t ord = hmap_ord(size);
     hmm->values = NULL;
 
     if ((hmm->keys = malloc((1 << ord) * sizeof (struct Key))) == NULL) {
