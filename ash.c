@@ -151,9 +151,9 @@ hmap_hash(void *mm, int32_t size, uint8_t ord) {
 
     switch (rest) {
         default: break;
-        case 3: hash += (ccurr[2]) << 0x10; __attribute__((fallthrough));
-        case 2: hash += (ccurr[1]) << 0x08; __attribute__((fallthrough));
-        case 1: hash += (ccurr[0]) << 0x00; __attribute__((fallthrough));
+        case 3: hash += (ccurr[2]) << 0x10; /* fall through */
+        case 2: hash += (ccurr[1]) << 0x08; /* fall through */
+        case 1: hash += (ccurr[0]) << 0x00; /* fall through */
     }
     if (ord < 5) {
         hash += hash >> 4;
@@ -170,8 +170,8 @@ hmap_bumpord(struct HashMapMem *hmm) {
     uint8_t ord = hmm->ord + 1;
     size_t ksz = (1u << ord) * sizeof (struct Key);
     size_t vsz = (1u << ord) * hmm->vsize;
+    void *values = NULL;
     struct Key *keys;
-    void *values;
 
     if ((keys = malloc(ksz)) == NULL) {
         return -1;
@@ -271,7 +271,7 @@ int
 hmap_at(struct HashMapMem *hmm, void *k, int32_t ksz, struct KeyPos *kp) {
     uint8_t ord = hmm->ord;
     uint32_t hash = hmap_hash(k, ksz, ord);
-    struct Key *kbeg = hmm->keys, *kcurr;
+    struct Key *kbeg = hmm->keys, *kcurr = kbeg;
 
     for (size_t i = 0; i < 1u << ord; i++) {
         uint32_t pos = (i + hash) & ((1u << ord) - 1);
