@@ -12,44 +12,6 @@
 #define TEST(x) {x, ""#x }
 
 int
-muli128_0(void) {
-    __m128i a, b;
-    __m256i c, r;
-
-    a = _mm_set_epi32(0, 0, 0, 0);
-    b = _mm_set_epi32(0, 0, 0, 0);
-    c = _mm256_set_epi32(0, 0, 0, 0, 0, 0, 0, 0);
-    r  = muli128(a, b);
-
-    return _mm256_movemask_epi8(_mm256_cmpeq_epi32(r, c)) == -1;
-}
-
-int
-muli128_1(void) {
-    __m128i a, b;
-    __m256i c, r;
-
-    a = _mm_set_epi32(0, 0, 1, 0);
-    b = _mm_set_epi32(0, 0, 1, 1);
-    c = _mm256_set_epi32(0, 0, 0, 0, 0, 1, 1, 0);
-    r  = muli128(a, b);
-
-    return _mm256_movemask_epi8(_mm256_cmpeq_epi32(r, c)) == -1;
-}
-
-int
-muli128_11(void) {
-    __m128i a;
-    __m256i c, r;
-
-    a = _mm_set_epi32(0, 0, 1, 1);
-    c = _mm256_set_epi32(0, 0, 0, 0, 0, 1, 0, 1);
-    r  = muli128(a, a);
-
-    return _mm256_movemask_epi8(_mm256_cmpeq_epi32(r, c)) == -1;
-}
-
-int
 mulGF2e128_2357_11131719(void) {
     __m128i a, b, c, r;
 
@@ -66,8 +28,7 @@ main() {
         int (*fn)(void);
         const char *wh;
     } tests[] = {
-        TEST(mulGF2e128_2357_11131719), TEST(muli128_0), TEST(muli128_1),
-        TEST(muli128_11),
+        TEST(mulGF2e128_2357_11131719),
         TEST(NULL),
     };
     for (struct Tst *test = tests; test->fn; test++) {
