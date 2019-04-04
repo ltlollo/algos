@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -275,62 +276,29 @@ tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
     uint8_t off = 0;
     size_t pos = 0;
     uint8_t *oit = obuf, *oend = obuf + osize;
-DECODE_BEG:
+
     while (oit != oend && pos + 32 == isize) {
-        int i = 0;
+        int i = 0, res = 0;
         for (; i < cutoff[0]; i++) {
-            int res = mskcmp2(mm2[i][off].data, ibuf + pos, mm2[i][off].mask);
-            if (res) {
-                *oit++ = sym[i];
-                pos += (reprsize[i] + off) / 8;
-                off = (off + reprsize[i]) & 7;
-                goto DECODE_BEG;
-            }
+            res = mskcmp2(mm2[i][off].data, ibuf + pos, mm2[i][off].mask);
         }
-        for (; i < cutoff[1]; i++) {
-            int res = mskcmp4(mm.sym[i][off].data, ibuf + pos,
-                mm.sym[i][off].mask
-            );
-            if (res) {
-                *oit++ = sym[i];
-                pos += (reprsize[i] + off) / 8;
-                off = (off + reprsize[i]) & 7;
-                goto DECODE_BEG;
-            }
+        for (; !res && i < cutoff[1]; i++) {
+            res = mskcmp4(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
         }
-        for (; i < cutoff[2]; i++) {
-            int res = mskcmp8(mm.sym[i][off].data, ibuf + pos,
-                mm.sym[i][off].mask
-            );
-            if (res) {
-                *oit++ = sym[i];
-                pos += (reprsize[i] + off) / 8;
-                off = (off + reprsize[i]) & 7;
-                goto DECODE_BEG;
-            }
+        for (; !res && i < cutoff[2]; i++) {
+            res = mskcmp8(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
         }
-        for (; i < cutoff[3]; i++) {
-            int res = mskcmp16(mm.sym[i][off].data, ibuf + pos,
-                mm.sym[i][off].mask
-            );
-            if (res) {
-                *oit++ = sym[i];
-                pos += (reprsize[i] + off) / 8;
-                off = (off + reprsize[i]) & 7;
-                goto DECODE_BEG;
-            }
+        for (; !res && i < cutoff[3]; i++) {
+            res = mskcmp16(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
         }
-        for (; i < 256; i++) {
-            int res = mskcmp16(mm.sym[i][off].data, ibuf + pos,
-                mm.sym[i][off].mask
-            );
-            if (res) {
-                *oit++ = sym[i];
-                pos += (reprsize[i] + off) / 8;
-                off = (off + reprsize[i]) & 7;
-                goto DECODE_BEG;
-            }
+        for (; !res && i < 256; i++) {
+            res = mskcmp32(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
         }
+        assert(res);
+
+        *oit++ = sym[i];
+        pos += (reprsize[i] + off) / 8;
+        off = (off + reprsize[i]) & 7;
     }
 }
 
