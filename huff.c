@@ -207,9 +207,7 @@ void
 tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
     size_t osize) {
     union align(32) {
-        struct aux {
-            uint8_t data[32], mask[32];
-        } sym[256][8];
+        struct aux { uint8_t data[32], mask[32]; } sym[256][8];
         char __[sizeof(struct aux) * 256 * 8 + 1];
     } mm;
 
@@ -262,20 +260,24 @@ tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
     }
     *cut++ = 256;
 
-    struct {
-        uint8_t data[2], mask[2];
-    } mm2[256][8];
+    struct { uint8_t data[2], mask[2]; } mm2[256][8];
+    struct { uint8_t data[8], mask[8]; } mm8[256][8];
 
     for (size_t i = 0; i < 256; i++) {
         for (size_t j = 1; j < 8; j++) {
-            memcpy(mm2[i][j].data, mm.sym[i][j].data, 2);
-            memcpy(mm2[i][j].mask, mm.sym[i][j].mask, 2);
+            memcpy(mm8[i][j].data, mm.sym[i][j].data, 8);
+            memcpy(mm8[i][j].mask, mm.sym[i][j].mask, 8);
+        }
+    }
+    for (size_t i = 0; i < 256; i++) {
+        for (size_t j = 1; j < 8; j++) {
+            memcpy(mm2[i][j].data, mm8[i][j].data, 2);
+            memcpy(mm2[i][j].mask, mm8[i][j].mask, 2);
         }
     }
 
-    uint8_t off = 0;
     size_t pos = 0;
-    uint8_t *oit = obuf, *oend = obuf + osize;
+    uint8_t *oit = obuf, *oend = obuf + osize, off = 0;
 
     while (oit != oend && pos + 32 == isize) {
         int i = 0, res = 0;
@@ -283,10 +285,10 @@ tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
             res = mskcmp2(mm2[i][off].data, ibuf + pos, mm2[i][off].mask);
         }
         for (; !res && i < cutoff[1]; i++) {
-            res = mskcmp4(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
+            res = mskcmp4(mm8[i][off].data, ibuf + pos, mm8[i][off].mask);
         }
         for (; !res && i < cutoff[2]; i++) {
-            res = mskcmp8(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
+            res = mskcmp8(mm8[i][off].data, ibuf + pos, mm8[i][off].mask);
         }
         for (; !res && i < cutoff[3]; i++) {
             res = mskcmp16(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
