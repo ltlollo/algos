@@ -9,28 +9,27 @@
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define align(n) __attribute__((aligned(n)))
+#define unused __attribute__((unused))
 
 struct table {
     uint8_t size[256];
     uint8_t sym[256][32];
 };
 
-struct state {
-    uint64_t pos;
-    uint8_t off;
-};
-
 void tnprint(struct table *, size_t);
 void tinit(uint64_t *, struct table *);
 int64_t tebufsize(struct table *, uint8_t *, size_t);
 uint64_t tencode(struct table *, uint8_t *, size_t, uint8_t *);
-void tdecode(struct table *, uint64_t *, uint8_t *, size_t, uint8_t *, size_t,
-        struct state *);
+void tdecode(struct table *, uint8_t *, size_t, uint8_t *, size_t);
 
 static void shl256r(uint8_t *restrict, uint8_t *restrict);
 static void shl256o(uint8_t *, uint8_t *);
 static void gmerge(int16_t *restrict, int16_t *restrict);
-static int mskcmp32(uint8_t *align(32), uint8_t *, uint8_t *align(32));
+static unused int mskcmp32(uint8_t *align(32), uint8_t *, uint8_t *align(32));
+static unused int mskcmp16(uint8_t *align(16), uint8_t *, uint8_t *align(16));
+static unused int mskcmp8(uint8_t *, uint8_t *, uint8_t *);
+static unused int mskcmp4(uint8_t *, uint8_t *, uint8_t *);
+static unused int mskcmp2(uint8_t *, uint8_t *, uint8_t *);
 
 int
 main() {
@@ -38,10 +37,10 @@ main() {
     for (size_t i = 0; i < 256; i++) {
         prob[i] = 1;
     }
+    prob[0] = 150;
     prob[1] = 100;
-    prob[0] = 50;
-    prob[2] = 30;
-    prob[3] = 20;
+    prob[2] = 130;
+    prob[3] = 120;
 
     struct table t;
     tinit(prob, &t);
@@ -50,14 +49,13 @@ main() {
     uint8_t buf[] = { 0, 1, 2, 3 };
     uint64_t tbs = tebufsize(&t, buf, sizeof(buf));
     uint8_t *eout = malloc(tbs);
-    uint8_t dout[256];
-    struct state state = { .pos = 0, .off = 0 };
+    uint8_t dout[4];
 
     if (eout == NULL) {
         return 1;
     }
     tencode(&t, buf, sizeof(buf), eout);
-    tdecode(&t, prob, eout, tbs, dout, sizeof(dout), &state);
+    tdecode(&t, eout, tbs, dout, 4);
 
     return 0;
 }
@@ -205,22 +203,22 @@ tencode(struct table *table, uint8_t *buf, size_t isize, uint8_t *out) {
 }
 
 void
-tdecode(struct table *table, uint64_t *iprob, uint8_t *ibuf, size_t isize,
-        uint8_t *obuf, size_t osize, struct state *state) {
-    union {
+tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
+    size_t osize) {
+    union align(32) {
         struct aux {
-            uint8_t data[32];
-            uint8_t mask[32];
+            uint8_t data[32], mask[32];
         } sym[256][8];
         char __[sizeof(struct aux) * 256 * 8 + 1];
     } mm;
+
     uint8_t sym[256];
     uint64_t prob[256];
     uint8_t reprsym[256][32];
     uint8_t reprsize[256];
 
     for (size_t i = 0; i < 256; i++) {
-        prob[i] = (~0ull) - iprob[i];
+        prob[i] = table->size[i];
     }
     for (size_t i = 0; i < 256; i++) {
         sym[i] = i;
@@ -251,32 +249,89 @@ tdecode(struct table *table, uint64_t *iprob, uint8_t *ibuf, size_t isize,
             shl256r(mm.sym[i][j].mask, mm.sym[i][j - 1].mask);
         }
     }
-    uint8_t off = state->off;
-    size_t pos = state->pos;
+
+    int cutoff[5], *cut = cutoff;
+
+    for (size_t i = 0, MAXOFF = 7, lstlen = 2; i < 256; i++) {
+        size_t size = reprsize[i] + MAXOFF;
+        if (size / 8 + !!(size % 8) > lstlen) {
+            lstlen = size / 8 + !!(size % 8);
+            *cut++ = i;
+        }
+    }
+    *cut++ = 256;
+
+    struct {
+        uint8_t data[2], mask[2];
+    } mm2[256][8];
+
+    for (size_t i = 0; i < 256; i++) {
+        for (size_t j = 1; j < 8; j++) {
+            memcpy(mm2[i][j].data, mm.sym[i][j].data, 2);
+            memcpy(mm2[i][j].mask, mm.sym[i][j].mask, 2);
+        }
+    }
+
+    uint8_t off = 0;
+    size_t pos = 0;
     uint8_t *oit = obuf, *oend = obuf + osize;
-    
-    do {
-        for (size_t i = 0; i < 256; i++) {
-            int res = mskcmp32(mm.sym[i][off].data, ibuf + pos,
+DECODE_BEG:
+    while (oit != oend && pos + 32 == isize) {
+        int i = 0;
+        for (; i < cutoff[0]; i++) {
+            int res = mskcmp2(mm2[i][off].data, ibuf + pos, mm2[i][off].mask);
+            if (res) {
+                *oit++ = sym[i];
+                pos += (reprsize[i] + off) / 8;
+                off = (off + reprsize[i]) & 7;
+                goto DECODE_BEG;
+            }
+        }
+        for (; i < cutoff[1]; i++) {
+            int res = mskcmp4(mm.sym[i][off].data, ibuf + pos,
                 mm.sym[i][off].mask
             );
             if (res) {
                 *oit++ = sym[i];
-                pos += reprsize[i] / 8;
-                off += reprsize[i] % 8;
-                break;
-            } else {
-                continue;
+                pos += (reprsize[i] + off) / 8;
+                off = (off + reprsize[i]) & 7;
+                goto DECODE_BEG;
             }
         }
-        if (oit >= oend) {
-            *state = (struct state){ .pos = pos, .off = off, };
-            return;
+        for (; i < cutoff[2]; i++) {
+            int res = mskcmp8(mm.sym[i][off].data, ibuf + pos,
+                mm.sym[i][off].mask
+            );
+            if (res) {
+                *oit++ = sym[i];
+                pos += (reprsize[i] + off) / 8;
+                off = (off + reprsize[i]) & 7;
+                goto DECODE_BEG;
+            }
         }
-        if (pos + 32 == isize) {
-            return;
+        for (; i < cutoff[3]; i++) {
+            int res = mskcmp16(mm.sym[i][off].data, ibuf + pos,
+                mm.sym[i][off].mask
+            );
+            if (res) {
+                *oit++ = sym[i];
+                pos += (reprsize[i] + off) / 8;
+                off = (off + reprsize[i]) & 7;
+                goto DECODE_BEG;
+            }
         }
-    } while (1);
+        for (; i < 256; i++) {
+            int res = mskcmp16(mm.sym[i][off].data, ibuf + pos,
+                mm.sym[i][off].mask
+            );
+            if (res) {
+                *oit++ = sym[i];
+                pos += (reprsize[i] + off) / 8;
+                off = (off + reprsize[i]) & 7;
+                goto DECODE_BEG;
+            }
+        }
+    }
 }
 
 void
@@ -355,7 +410,7 @@ mskcmp32(uint8_t *align(32) a, uint8_t *b, uint8_t *align(32) msk) {
 }
 #else
 static int
-mskcmp32(uint8_t *align(32) a, uint8_t *b, uint8_t *align(32) msk) {
+mskcmp32(uint8_t *a, uint8_t *b, uint8_t *msk) {
     int res = 1;
 
     for (size_t j = 0; j < 32 && res; j++) {
@@ -364,3 +419,51 @@ mskcmp32(uint8_t *align(32) a, uint8_t *b, uint8_t *align(32) msk) {
     return res;
 }
 #endif
+
+#if __AVX__ || __AVX2__
+static int
+mskcmp16(uint8_t *align(16) a, uint8_t *b, uint8_t *align(16) msk) {
+    __m128i ra = _mm_load_si128((void *)a);
+    __m128i rb = _mm_loadu_si128((void *)b);
+    __m128i rm = _mm_load_si128((void *)msk);
+    __m128i cmp = _mm_cmpeq_epi8(ra, _mm_and_si128(rm, rb));
+    return _mm_movemask_epi8(cmp) == ~0;
+}
+#else
+static int
+mskcmp16(uint8_t *a, uint8_t *b, uint8_t *msk) {
+    int res = 1;
+
+    for (size_t j = 0; j < 16 && res; j++) {
+        res &= a[j] == (msk[j] & b[j]);
+    }
+    return res;
+}
+#endif
+
+static int
+mskcmp8(uint8_t * a, uint8_t *b, uint8_t *msk) {
+    uint64_t ra = *(uint64_t *)(void *)a;
+    uint64_t rb = *(uint64_t *)(void *)b;
+    uint64_t rm = *(uint64_t *)(void *)msk;
+
+    return ra == (rb & rm);
+}
+
+static int
+mskcmp4(uint8_t * a, uint8_t *b, uint8_t *msk) {
+    uint32_t ra = *(uint32_t *)(void *)a;
+    uint32_t rb = *(uint32_t *)(void *)b;
+    uint32_t rm = *(uint32_t *)(void *)msk;
+
+    return ra == (rb & rm);
+}
+
+static int
+mskcmp2(uint8_t * a, uint8_t *b, uint8_t *msk) {
+    uint16_t ra = *(uint16_t *)(void *)a;
+    uint16_t rb = *(uint16_t *)(void *)b;
+    uint16_t rm = *(uint16_t *)(void *)msk;
+
+    return ra == (rb & rm);
+}
