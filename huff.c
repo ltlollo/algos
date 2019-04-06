@@ -136,7 +136,6 @@ tebufsize(struct table *table, uint8_t *buf, size_t isize) {
     uint64_t size[9] = { 0, }, *csize = size, res = 0, rst = 0;
 
     for (uint64_t i = 0; i < isize; i++) {
-        *csize += table->size[buf[i]];
         if ((*csize += table->size[buf[i]]) > 0x7fffffffffffffff) {
             csize++;
         }
@@ -154,18 +153,55 @@ uint64_t
 tencode(struct table *table, uint8_t *buf, size_t isize, uint8_t *out) {
     uint8_t sym[256][8][32];
 
+    int cutoff[5], *cut = cutoff;
+    uint8_t *reprsize = table->size;
+    for (size_t i = 0, MAXOFF = 7, lstlen = 2; i < 256; i++) {
+        size_t size = reprsize[i] + MAXOFF;
+        size_t nxtlen = size / 8 + !!(size % 8);
+        for (; lstlen < nxtlen; lstlen++) {
+            *cut++ = i;
+        }
+    }
+    *cut++ = 256;
+
     for (size_t i = 0; i < 256; i++) {
         memcpy(sym[i][0], table->sym[i], 32);
         for (size_t j = 1; j < 8; j++) {
             shl256r(sym[i][j], sym[i][j - 1]);
         }
     }
+    uint8_t sym2[256][8][2], sym8[256][8][8];
+
+    for (size_t i = 0; i < 256; i++) {
+        for (size_t j = 0; j < 8; j++) {
+            memcpy(sym8[i][j], sym[i][j], 8);
+        }
+    }
+    for (size_t i = 0; i < 256; i++) {
+        for (size_t j = 0; j < 8; j++) {
+            memcpy(sym2[i][j], sym8[i][j], 2);
+        }
+    }
+
     uint8_t off = 0;
     uint64_t pos = 0;
+
     for (size_t i = 0; i < isize; i++) {
-        uint8_t ch = buf[i], *it = sym[ch][off];
-        for (size_t j = 0; j < 32; j++) {
-            out[pos + j] |= it[j];
+        uint8_t ch = buf[i];
+        uint8_t *it = sym[ch][off];
+
+        if (ch < cutoff[0]) {
+            for (size_t j = 0; j < 2; j++) {
+                out[pos + j] |= it[j];
+            }
+        } else if (ch < cutoff[2]) {
+            for (size_t j = 0; j < 8; j++) {
+                out[pos + j] |= it[j];
+            }
+        } else {
+            for (size_t j = 0; j < 32; j++) {
+                out[pos + j] |= it[j];
+            }
         }
         pos += (table->size[ch] + off) / 8;
         off = (off + table->size[ch]) & 7;
@@ -223,8 +259,8 @@ tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
 
     for (size_t i = 0, MAXOFF = 7, lstlen = 2; i < 256; i++) {
         size_t size = reprsize[i] + MAXOFF;
-        if (size / 8 + !!(size % 8) > lstlen) {
-            lstlen = size / 8 + !!(size % 8);
+        size_t nxtlen = size / 8 + !!(size % 8);
+        for (; lstlen < nxtlen; lstlen++) {
             *cut++ = i;
         }
     }
