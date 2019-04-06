@@ -463,3 +463,7 @@ mskcmp2(uint8_t * a, uint8_t *b, uint8_t *msk) {
 
     return ra == (rb & rm);
 }
+
+#undef MIN
+#undef MAX
+#undef align
