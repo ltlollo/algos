@@ -1,20 +1,8 @@
-#include <assert.h>
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#if __AVX2__
-#include <immintrin.h>
-#endif
-
-#define MIN(a, b) ((a) > (b) ? (b) : (a))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define align(n) __attribute__((aligned(n)))
-#define unused __attribute__((unused))
+#include <stddef.h>
 
 struct table {
-    uint8_t size[256];
-    uint8_t sym[256][32];
+    uint8_t size[256], sym[256][32];
 };
 
 void tnprint(struct table *, size_t);
@@ -23,43 +11,25 @@ int64_t tebufsize(struct table *, uint8_t *, size_t);
 uint64_t tencode(struct table *, uint8_t *, size_t, uint8_t *);
 void tdecode(struct table *, uint8_t *, size_t, uint8_t *, size_t);
 
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#if __AVX2__
+#   include <immintrin.h>
+#endif
+
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define align(n) __attribute__((aligned(n)))
+
 static void shl256r(uint8_t *restrict, uint8_t *restrict);
 static void shl256o(uint8_t *, uint8_t *);
 static void gmerge(int16_t *restrict, int16_t *restrict);
-static unused int mskcmp32(uint8_t *align(32), uint8_t *, uint8_t *align(32));
-static unused int mskcmp16(uint8_t *align(16), uint8_t *, uint8_t *align(16));
-static unused int mskcmp8(uint8_t *, uint8_t *, uint8_t *);
-static unused int mskcmp4(uint8_t *, uint8_t *, uint8_t *);
-static unused int mskcmp2(uint8_t *, uint8_t *, uint8_t *);
-
-int
-main() {
-    uint64_t prob[256];
-    for (size_t i = 0; i < 256; i++) {
-        prob[i] = 1;
-    }
-    prob[0] = 150;
-    prob[1] = 100;
-    prob[2] = 130;
-    prob[3] = 120;
-
-    struct table t;
-    tinit(prob, &t);
-    tnprint(&t, 4);
-
-    uint8_t buf[] = { 0, 1, 2, 3 };
-    uint64_t tbs = tebufsize(&t, buf, sizeof(buf));
-    uint8_t *eout = malloc(tbs);
-    uint8_t dout[4];
-
-    if (eout == NULL) {
-        return 1;
-    }
-    tencode(&t, buf, sizeof(buf), eout);
-    tdecode(&t, eout, tbs, dout, 4);
-
-    return 0;
-}
+static int mskcmp32(uint8_t *align(32), uint8_t *, uint8_t *align(32));
+static int mskcmp16(uint8_t *align(16), uint8_t *, uint8_t *align(16));
+static int mskcmp8(uint8_t *, uint8_t *, uint8_t *);
+static int mskcmp4(uint8_t *, uint8_t *, uint8_t *);
+static int mskcmp2(uint8_t *, uint8_t *, uint8_t *);
 
 static void
 psort(uint64_t *prob, uint8_t *sym) {
@@ -264,13 +234,13 @@ tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
     struct { uint8_t data[8], mask[8]; } mm8[256][8];
 
     for (size_t i = 0; i < 256; i++) {
-        for (size_t j = 1; j < 8; j++) {
+        for (size_t j = 0; j < 8; j++) {
             memcpy(mm8[i][j].data, mm.sym[i][j].data, 8);
             memcpy(mm8[i][j].mask, mm.sym[i][j].mask, 8);
         }
     }
     for (size_t i = 0; i < 256; i++) {
-        for (size_t j = 1; j < 8; j++) {
+        for (size_t j = 0; j < 8; j++) {
             memcpy(mm2[i][j].data, mm8[i][j].data, 2);
             memcpy(mm2[i][j].mask, mm8[i][j].mask, 2);
         }
@@ -279,22 +249,42 @@ tdecode(struct table *table, uint8_t *ibuf, size_t isize, uint8_t *obuf,
     size_t pos = 0;
     uint8_t *oit = obuf, *oend = obuf + osize, off = 0;
 
-    while (oit != oend && pos + 32 == isize) {
+    while (oit != oend && pos + 32 != isize) {
         int i = 0, res = 0;
         for (; i < cutoff[0]; i++) {
-            res = mskcmp2(mm2[i][off].data, ibuf + pos, mm2[i][off].mask);
+            if ((res = mskcmp2(mm2[i][off].data, ibuf + pos,
+                        mm2[i][off].mask))
+                ) {
+                break;
+            }
         }
         for (; !res && i < cutoff[1]; i++) {
-            res = mskcmp4(mm8[i][off].data, ibuf + pos, mm8[i][off].mask);
+            if ((res = mskcmp4(mm8[i][off].data, ibuf + pos,
+                        mm8[i][off].mask))
+                ) {
+                break;
+            }
         }
         for (; !res && i < cutoff[2]; i++) {
-            res = mskcmp8(mm8[i][off].data, ibuf + pos, mm8[i][off].mask);
+            if ((res = mskcmp8(mm8[i][off].data, ibuf + pos,
+                        mm8[i][off].mask))
+                ) {
+                break;
+            }
         }
         for (; !res && i < cutoff[3]; i++) {
-            res = mskcmp16(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
+            if ((res = mskcmp16(mm.sym[i][off].data, ibuf + pos,
+                        mm.sym[i][off].mask))
+                ) {
+                break;
+            }
         }
         for (; !res && i < 256; i++) {
-            res = mskcmp32(mm.sym[i][off].data, ibuf + pos, mm.sym[i][off].mask);
+            if ((res = mskcmp32(mm.sym[i][off].data, ibuf + pos,
+                        mm.sym[i][off].mask))
+                ) {
+                break;
+            }
         }
         assert(res);
 
