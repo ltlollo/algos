@@ -188,17 +188,19 @@ tencode(struct table *table, uint8_t *buf, size_t isize, uint8_t *out) {
 
     for (size_t i = 0; i < isize; i++) {
         uint8_t ch = buf[i];
-        uint8_t *it = sym[ch][off];
 
         if (ch < cutoff[0]) {
+            uint8_t *it = sym2[ch][off];
             for (size_t j = 0; j < 2; j++) {
                 out[pos + j] |= it[j];
             }
         } else if (ch < cutoff[2]) {
+            uint8_t *it = sym8[ch][off];
             for (size_t j = 0; j < 8; j++) {
                 out[pos + j] |= it[j];
             }
         } else {
+            uint8_t *it = sym[ch][off];
             for (size_t j = 0; j < 32; j++) {
                 out[pos + j] |= it[j];
             }
