@@ -77,7 +77,7 @@ tinit(uint64_t *iprob, struct table *table) {
         /* find merge candidates */
         int16_t from_group = sym[i - 1];
         int16_t to_group = sym[i];
-        int16_t *groupa, *groupb;
+        int16_t *groupa = NULL, *groupb = NULL;
         for (size_t i = 0; i < 256; i++) {
             for (size_t j = 0; j < 256 && buf[i][j] != -1; j++) {
                 if (buf[i][j] == from_group) {

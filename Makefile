@@ -5,7 +5,7 @@ REL_CFLAGS = ${CFLAGS}  -s -Ofast -funroll-all-loops -minline-all-stringops \
 DBG_CFLAGS = ${CFLAGS} -O0 -g
 
 test: 	mmtst cryptst hufftst
-bench: 	mmbch crypbch
+bench: 	mmbch crypbch huffbch
 .PHONY: clean test bench
 
 %inc: %*.c	; printf "#include \"$*.c\"\nint main() {}" | $(CC) ${CFLAGS} -xc -

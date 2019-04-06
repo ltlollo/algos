@@ -23,7 +23,7 @@ encode_decode(void) {
     uint8_t dout[4];
 
     if (eout == NULL) {
-        return 1;
+        return 0;
     }
     tencode(&t, buf, sizeof(buf), eout);
     tdecode(&t, eout, tbs, dout, 4);
