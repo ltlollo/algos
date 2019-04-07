@@ -30,7 +30,7 @@ static int mskcmp16(uint8_t *align(16), uint8_t *, uint8_t *align(16));
 static int mskcmp8(uint8_t *, uint8_t *, uint8_t *);
 static int mskcmp4(uint8_t *, uint8_t *, uint8_t *);
 static int mskcmp2(uint8_t *, uint8_t *, uint8_t *);
-static size_t binrepr(uint8_t *, size_t, char *);
+static char *binrepr(uint8_t *, size_t, char *);
 
 static void
 psort(uint64_t *prob, uint8_t *sym) {
@@ -341,14 +341,14 @@ tnprint(struct table *table, size_t size) {
 
     for (size_t i = 0; i < size; i++) {
         uint8_t *beg = tsym + i * 32;
-        size_t s = binrepr(beg, tsize[i], str);
-        str[s] = '\0';
+        char *end = binrepr(beg, tsize[i], str);
+        *end = '\0';
         printf("%s\n", str);
     }
 }
 
-size_t
-binrepr(uint8_t *bin, size_t size, char *str) {
+char *
+binrepr(uint8_t *bin, size_t size, char *buf) {
     /* non-cyclic 8 length binary De Bruijn sequence (see: A169674)*/
     static char repr[256 + 7] = {
         "000000001000000110000010100000111000010010000101100001101000011110001"
@@ -374,21 +374,21 @@ binrepr(uint8_t *bin, size_t size, char *str) {
         "\xf0\xf4\xfc\x3d\x79\xa1\xc3\xcd\xe7\xef\xfb\x78\xcc\xe6\xfa\xcb\xf9"
         "\xf8"
     };
-    char *buf = str;
-    size_t i = 0;
-    uint8_t soff = off[bin[i]];
-    for (; i < size / 8; i++) {
-        for (size_t j = 0; j < 8; j++) {
-            *buf++ = repr[soff + j];
-        }
-    }
+    size_t i = size / 8;
     if (size % 8) {
-        soff = off[bin[i]] + 8 - size % 8;
+        uint8_t soff = off[bin[i]] + 8 - size % 8;
         for (size_t j = 0; j < size % 8; j++) {
             *buf++ = repr[soff + j];
         }
     }
-    return buf - str;
+    for (; i; i--) {
+        uint8_t soff = off[bin[i - 1]];
+        for (size_t j = 0; j < 8; j++) {
+            *buf++ = repr[soff + j];
+        }
+    }
+
+    return buf;
 }
 
 static void
