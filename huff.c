@@ -1,3 +1,6 @@
+// This is free and unencumbered software released into the public domain.
+// For more information, see LICENSE
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -31,27 +34,6 @@ static int mskcmp8(uint8_t *, uint8_t *, uint8_t *);
 static int mskcmp4(uint8_t *, uint8_t *, uint8_t *);
 static int mskcmp2(uint8_t *, uint8_t *, uint8_t *);
 static char *binrepr(uint8_t *, size_t, char *);
-
-static void
-psort(uint64_t *prob, uint8_t *sym) {
-    uint8_t bsym[2][256];
-    uint64_t bprob[2][256];
-    uint64_t mask = 1;
-
-    /* 2-bucket radix sort sym[] and prob[], low prob first */
-    for (size_t j = 0; j < 64; j++, mask <<= 1) {
-        int bsize[2] = { 0, 0 };
-        for (size_t i = 0; i < 256; i++) {
-            int bnum = (prob[i] & mask) >> j;
-            bprob[bnum][bsize[bnum]] = prob[i];
-            bsym[bnum][bsize[bnum]++] = sym[i];
-        }
-        memcpy(prob, bprob[0], bsize[0] * sizeof(*prob));
-        memcpy(prob + bsize[0], bprob[1], bsize[1] * sizeof(*prob));
-        memcpy(sym, bsym[0], bsize[0] * sizeof(*sym));
-        memcpy(sym + bsize[0], bsym[1], bsize[1] * sizeof(*sym));
-    }
-}
 
 void
 tinit(uint64_t *iprob, struct table *table) {
@@ -123,6 +105,27 @@ tinit(uint64_t *iprob, struct table *table) {
                 break;
             }
         }
+    }
+}
+
+static void
+psort(uint64_t *prob, uint8_t *sym) {
+    uint8_t bsym[2][256];
+    uint64_t bprob[2][256];
+    uint64_t mask = 1;
+
+    /* 2-bucket radix sort sym[] and prob[], low prob first */
+    for (size_t j = 0; j < 64; j++, mask <<= 1) {
+        int bsize[2] = { 0, 0 };
+        for (size_t i = 0; i < 256; i++) {
+            int bnum = (prob[i] & mask) >> j;
+            bprob[bnum][bsize[bnum]] = prob[i];
+            bsym[bnum][bsize[bnum]++] = sym[i];
+        }
+        memcpy(prob, bprob[0], bsize[0] * sizeof(*prob));
+        memcpy(prob + bsize[0], bprob[1], bsize[1] * sizeof(*prob));
+        memcpy(sym, bsym[0], bsize[0] * sizeof(*sym));
+        memcpy(sym + bsize[0], bsym[1], bsize[1] * sizeof(*sym));
     }
 }
 
@@ -387,7 +390,6 @@ binrepr(uint8_t *bin, size_t size, char *buf) {
             *buf++ = repr[soff + j];
         }
     }
-
     return buf;
 }
 

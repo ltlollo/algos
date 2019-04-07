@@ -1,3 +1,6 @@
+// This is free and unencumbered software released into the public domain.
+// For more information, see LICENSE
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
