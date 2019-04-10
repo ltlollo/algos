@@ -29,7 +29,6 @@ encode_decode(void) {
         return 0;
     }
     tencode(&t, buf, sizeof(buf), eout);
-    tnprint(&t, 5);
     tdecode(&t, eout, tbs, dout, 4);
 
     return memcmp(dout, buf, 4) == 0;

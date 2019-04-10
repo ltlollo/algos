@@ -34,6 +34,7 @@ static int mskcmp8(uint8_t *, uint8_t *, uint8_t *);
 static int mskcmp4(uint8_t *, uint8_t *, uint8_t *);
 static int mskcmp2(uint8_t *, uint8_t *, uint8_t *);
 static char *binrepr(uint8_t *, size_t, char *);
+static void psort(uint64_t *, uint8_t *);
 
 void
 tinit(uint64_t *iprob, struct table *table) {
