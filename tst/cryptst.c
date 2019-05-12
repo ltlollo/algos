@@ -27,8 +27,5 @@ main() {
         TEST(mulGF2e128_2357_11131719),
         TEST(NULL),
     };
-    for (struct Tst *test = tests; test->fn; test++) {
-        int res = test->fn();
-        printf("[%s]: %s\n", res ? "OK" : "FAIL", test->wh);
-    }
+    return test(__FILE__, tests);
 }

@@ -660,8 +660,5 @@ main() {
         TEST(dgemmf64_16x16x8),
         TEST(NULL),
     };
-    for (struct Tst *test = tests; test->fn; test++) {
-        int res = test->fn();
-        printf("[%s]: %s\n", res ? "OK" : "FAIL", test->wh);
-    }
+    return test(__FILE__, tests);
 }

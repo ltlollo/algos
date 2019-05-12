@@ -15,7 +15,7 @@ struct Tst {
     const char *wh;
 };
 
-void bench(struct Bnc *);
-void test(struct Tst *);
+void bench(const char *, struct Bnc *);
+size_t test(const char *, struct Tst *);
 
 #endif // UTILS_H
