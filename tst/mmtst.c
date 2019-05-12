@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "mm.h"
+#include "tbh.h"
 
-#define TEST(x) {x, ""#x }
 #define L3 (2048 * 1024 / sizeof (float))
 #define L2 ( 256 * 1024 / sizeof (float))
 
@@ -647,10 +647,7 @@ dotf32_16(void) {
 
 int
 main() {
-    struct Tst {
-        int (*fn)(void);
-        const char *wh;
-    } tests[] = {
+    struct Tst tests[] = {
         TEST(dgemmf32_16x8x8),     TEST(dgemmf32_8x16x8),
         TEST(dgemmf32_8x8x16),     TEST(dgemmf32_16x16x8),
         TEST(dgemmf32_16x8x16),    TEST(dgemmf32_8x16x16),

@@ -8,8 +8,8 @@
 #include <string.h>
 #include <time.h>
 #include "mm.h"
+#include "tbh.h"
 
-#define BENCH(x, ...) {x, ""#x, (__VA_ARGS__) }
 #define L3 (2048 * 1024 / sizeof (float))
 #define L2 ( 512 * 1024 / sizeof (float))
 
@@ -106,11 +106,7 @@ main() {
 
     m = k = n = 512;
 
-    struct Bnc {
-        void (*fn)(void *);
-        const char *wh;
-        void *p;
-    } benchs[] = {
+    struct Bnc benchs[] = {
         BENCH(dgemmf32_512x512, &(struct benchpar) {
             1<<7, a, b, c, m, k, n, L2, L3
         }),

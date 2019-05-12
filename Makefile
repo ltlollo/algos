@@ -5,12 +5,20 @@ REL_CFLAGS = ${CFLAGS}  -s -Ofast -funroll-all-loops -minline-all-stringops \
 DBG_CFLAGS = ${CFLAGS} -O0 -g
 
 test: 	mmtst cryptst hufftst
-bench: 	mmbch crypbch huffbch
+bench: 	mmbnc crypbnc huffbnc
 .PHONY: clean test bench
 
-%inc: %*.c	; printf "#include \"$*.c\"\nint main() {}" | $(CC) ${CFLAGS} -xc -
-%tst: %dbg %inc	; $(CC) ${LDFLAGS} ${DBG_CFLAGS} $*.o $@.c -o $@; ./$@
-%bch: %rel 	; $(CC) ${LDFLAGS} ${REL_CFLAGS} $*.o $@.c -o $@; ./$@
-%dbg: %*.c 	; $(CC) ${DBG_CFLAGS} -c $*.c
-%rel: %*.c	; $(CC) ${REL_CFLAGS} -c $*.c
-clean: 		; rm -f *.o *tst *bch
+%inc: src/%*.c
+	echo "#include \"src/$*.c\"\nint main(){}"|$(CC) ${CFLAGS} -xc - -o/dev/null
+%tst: %dbg %inc tbhdbg tst/%*.c
+	$(CC) ${LDFLAGS} ${DBG_CFLAGS} ./$*.o ./tbh.o tst/$@.c -Isrc -o ./$@
+	./$@
+%bnc: %rel tbhrel bnc/%*.c
+	$(CC) ${LDFLAGS} ${REL_CFLAGS} ./$*.o ./tbh.o bnc/$@.c -Isrc -o ./$@
+	./$@
+%dbg: src/%*.c
+	$(CC) ${DBG_CFLAGS} -c src/$*.c -o ./$*.o
+%rel: src/%*.c
+	$(CC) ${REL_CFLAGS} -c src/$*.c -o ./$*.o
+clean:
+	rm -f *.o ?*tst ?*bnc

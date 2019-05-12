@@ -8,8 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "cryp.h"
-
-#define TEST(x) {x, ""#x }
+#include "tbh.h"
 
 int
 mulGF2e128_2357_11131719(void) {
@@ -24,10 +23,7 @@ mulGF2e128_2357_11131719(void) {
 
 int
 main() {
-    struct Tst {
-        int (*fn)(void);
-        const char *wh;
-    } tests[] = {
+    struct Tst tests[] = {
         TEST(mulGF2e128_2357_11131719),
         TEST(NULL),
     };

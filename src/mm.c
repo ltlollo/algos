@@ -613,5 +613,5 @@ FN(Tm, FS)(Num *m, Num *restrict mc, size_t my, size_t mx) {
 #define SELF
 
 #if !defined (F64T)
-#   include __FILE__
+#   include "mm.c"
 #endif

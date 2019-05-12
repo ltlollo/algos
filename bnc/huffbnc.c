@@ -8,8 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include "huff.h"
-
-#define BENCH(x, ...) {x, ""#x, (__VA_ARGS__) }
+#include "tbh.h"
 
 struct benchpar {
     size_t times;
@@ -65,11 +64,7 @@ main() {
     printf("encode size: %ld\n", decodebufsz);
     tencode(&table, encodebuf, encodebufsz, decodebuf);
 
-    struct Bnc {
-        void (*fn)(void *);
-        const char *wh;
-        void *p;
-    } benchs[] = {
+    struct Bnc benchs[] = {
         BENCH(encode, &(struct benchpar) {
             1<<5, &table, encodebuf, decodebuf, encodebufsz, decodebufsz
         }),

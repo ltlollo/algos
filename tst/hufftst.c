@@ -8,8 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "huff.h"
-
-#define TEST(x) {x, ""#x}
+#include "tbh.h"
 
 int
 encode_decode(void) {
@@ -36,10 +35,7 @@ encode_decode(void) {
 
 int
 main() {
-    struct Tst {
-        int (*fn)(void);
-        const char *wh;
-    } tests[] = {
+    struct Tst tests[] = {
         TEST(encode_decode),
         TEST(NULL),
     };

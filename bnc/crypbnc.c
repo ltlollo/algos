@@ -8,8 +8,7 @@
 #include <string.h>
 #include <time.h>
 #include "cryp.h"
-
-#define BENCH(x, ...) {x, ""#x, (__VA_ARGS__) }
+#include "tbh.h"
 
 struct benchpar {
     size_t times;
@@ -31,11 +30,7 @@ int
 main() {
     __m128i a = _mm_set1_epi32(1), b = _mm_set1_epi32(2);
 
-    struct Bnc {
-        void (*fn)(void *);
-        const char *wh;
-        void *p;
-    } benchs[] = {
+    struct Bnc benchs[] = {
         BENCH(mulgf2e128mod0x87_1_2, &(struct benchpar) { 1<<26, a, b }),
         BENCH(NULL, NULL),
     };
