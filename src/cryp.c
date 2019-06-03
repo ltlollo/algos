@@ -114,7 +114,7 @@ static uint16_t hi_residue[1 << 4] = {
     0x83b9, 0xb5ea, 0xa7db, 0xd94c, 0xcb7d, 0xfd2e, 0xef1f,
 };
 
-static uint8_t
+static inline uint8_t
 bitrev8(uint8_t in) {
     return rev[in >> 4] | (rev[in & 0x0f] << 4);
 }
