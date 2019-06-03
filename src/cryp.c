@@ -123,7 +123,7 @@ uint16_t
 crc16kermit(void *isrc, size_t size) {
     uint8_t *src = isrc;
     uint16_t res = 0;
-    for( size_t i = 0; i < size; i++ ) {
+    for (size_t i = 0; i < size; i++) {
         res = (res << 8) ^ residue[((res >> 8) ^ bitrev8(src[i]))];
     }
     return (bitrev8(res >> 8) << 8) | bitrev8(res & 0xff);
@@ -133,7 +133,7 @@ uint16_t
 crc16kermitlite(void *isrc, size_t size) {
     uint8_t *src = isrc;
     uint16_t res = 0;
-    for(size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
         res = (res << 8)
             ^ hi_residue[((res >> 8)
             ^ (rev[src[i] & 0x0f] << 4)) >> 4]
