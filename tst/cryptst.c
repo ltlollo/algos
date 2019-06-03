@@ -22,9 +22,28 @@ mulGF2e128_2357_11131719(void) {
 }
 
 int
+crc16kermit_msg(void) {
+    char *msg = "msg";
+    size_t size = sizeof(msg) - 1;
+
+    return crc16kermit(msg, size) == 0xfd0f;
+}
+
+int
+crc16kermitlite_eq_crc16kermit(void) {
+    char *msg = "msg";
+    size_t size = sizeof(msg) - 1;
+
+    return crc16kermit(msg, size) == crc16kermitlite(msg, size);
+}
+
+
+int
 main() {
     struct Tst tests[] = {
         TEST(mulGF2e128_2357_11131719),
+        TEST(crc16kermit_msg),
+        TEST(crc16kermitlite_eq_crc16kermit),
         TEST(NULL),
     };
     return test(__FILE__, tests);

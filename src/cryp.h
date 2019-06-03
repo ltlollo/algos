@@ -2,6 +2,10 @@
 // For more information, see LICENSE
 
 #include <immintrin.h>
+#include <stdint.h>
 
-__m256i muli128(__m128i x, __m128i h);
-__m128i mulgf2e128mod0x87bitrev(__m128i x, __m128i h);
+__m256i muli128(__m128i, __m128i);
+__m128i mulgf2e128mod0x87bitrev(__m128i, __m128i);
+
+uint16_t crc16kermit(void *, size_t);
+uint16_t crc16kermitlite(void *, size_t);
